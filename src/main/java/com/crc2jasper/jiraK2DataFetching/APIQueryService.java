@@ -101,21 +101,4 @@ public class APIQueryService {
         return targetPackagePaths;
     }
 
-
-
-//    public static void testJSoup2(){
-//        try{
-//            String url = "https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form/?formNumber=M-ITOCMS-24-1165&tab=PACKAGE&page=1";
-//            String username = "ckh637";
-//            String password = "$LCMjj171";
-//            String auth = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-//            Connection connection = Jsoup.connect(url) .header("Authorization", "Basic " + auth);
-//            Document doc = connection.get();
-//            System.out.println(doc.getElementsByClass("runtime-list-item").getFirst().text());
-//        }catch (IOException e){
-//            e.printStackTrace();
-//        }
-//
-//    }
-
 }
