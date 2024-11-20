@@ -13,16 +13,18 @@ public class EmailScheduler {
 
 //    @Scheduled(cron = "*/30 * * * * *")
 
-
+    // Start at 17:00 every day
     @Scheduled(cron = "0 0 17 * * *")
     public static void sendUrgentServiceEmail(){
         allFormData.clearAllEmailFormData();
-        SystemIni.startAPICall(singletonConfig.getFullJiraAPIUrgentService());
-        EmailService.sendEmail(singletonConfig.getEmailSubjectUrgentService());
+        APIQueryService.fetchJiraUrgentServiceAPI();
+        // Exception may be due to parameter passing, try not to pass parameter
+        // all methods can't have parameters, must do it in the method itself
+        EmailService.sendUrgentServiceEmail();
         allFormData.clearAllEmailFormData();
     }
 
-
+    // Check at 17:30 every day
     @Scheduled(cron = "0 30 17 * * *")
     public static void sendBiweeklyEmail(){
         if(EmailService.dailyCheckForNewRelease()){
@@ -36,13 +38,14 @@ public class EmailScheduler {
             // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500
 
             allFormData.clearAllEmailFormData();
-            SystemIni.startAPICall(polishedJiraAPI);
-            EmailService.sendEmail(singletonConfig.getEmailSubjectBiweekly());
+            APIQueryService.fetchJiraBiweeklyAPI();
+            EmailService.sendBiweeklyEmail();
             promotionRelease.setToResendTmr();
             allFormData.clearAllEmailFormData();
         }
     }
 
+    // Check at 09:00 every day
     @Scheduled(cron = "0 0 9 * * *")
     public static void resendBiweeklyEmail(){
         if(promotionRelease.getResendTmrStatus()){
@@ -56,8 +59,8 @@ public class EmailScheduler {
             // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500
 
             allFormData.clearAllEmailFormData();
-            SystemIni.startAPICall(polishedJiraAPI);
-            EmailService.sendEmail(singletonConfig.getEmailSubjectBiweekly());
+            APIQueryService.fetchJiraBiweeklyAPI();
+            EmailService.sendBiweeklyEmail();
             promotionRelease.resetResendTmrStatus();
             allFormData.clearAllEmailFormData();
         }
@@ -76,8 +79,8 @@ public class EmailScheduler {
             // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500
 
             allFormData.clearAllEmailFormData();
-            SystemIni.startAPICall(polishedJiraAPI);
-            EmailService.sendEmail(singletonConfig.getEmailSubjectBiweekly());
+            APIQueryService.fetchJiraBiweeklyAPI();
+            EmailService.sendBiweeklyEmail();
             promotionRelease.setToResendTmr();
             allFormData.clearAllEmailFormData();
         }

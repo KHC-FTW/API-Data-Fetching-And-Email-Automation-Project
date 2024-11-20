@@ -2,17 +2,9 @@ package com.crc2jasper.jiraK2DataFetching;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Map;
 import java.util.Scanner;
 
 public class SystemIni {
@@ -23,8 +15,8 @@ public class SystemIni {
 
     public static ObjectMapper getObjectMapper(){return SystemIni.objectMapper;}
 
-    public static void startAPICall(String jiraAPI){
-        APIQueryService.fetchJiraAPI(jiraAPI);
+    public static void startAPICall(){
+        APIQueryService.fetchJiraUrgentServiceAPI();
     }
 
     public static void readJsonConfigFile(String[] args){

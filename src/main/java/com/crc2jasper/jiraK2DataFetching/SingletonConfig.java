@@ -13,6 +13,7 @@ public class SingletonConfig {
     private static SingletonConfig singletonAPIConfig = new SingletonConfig();
     private static File jsonFile;
     public static SingletonConfig getInstance(){return singletonAPIConfig;}
+    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
 
     @Getter
     @Setter
@@ -93,12 +94,16 @@ public class SingletonConfig {
 
     public String getFullJiraAPIUrgentService(){return apiConfig.jiraAPI + apiConfig.jql_urgent_service + apiConfig.jiraFields;}
     public String getRawJiraAPIBiweeklyPrn(){return apiConfig.jiraAPI + apiConfig.jql_biweekly_prn + apiConfig.jiraFields;}
+    public String getFullJiraAPIBiweeklyPrn(){
+        String year = promotionRelease.getYear();   //e.g. 2024
+        String year_batch = year + "_" + promotionRelease.getBatch();   //e.g. 2024_13
+        return apiConfig.jiraAPI + String.format(apiConfig.jql_biweekly_prn, year_batch, year) + apiConfig.jiraFields;
+    }
     public String getJfrogAPI(){return apiConfig.jfrogAPI;}
 
     public String getEmailSubjectUrgentService(){return emailConfig.subject_urgent_service;}
     public String getEmailSubjectBiweekly(){
-        PromotionRelease instance = PromotionRelease.getInstance();
-        String year_batch = instance.getYear() + "-" + instance.getBatch();
+        String year_batch = promotionRelease.getYear() + "-" + promotionRelease.getBatch();
         return String.format(emailConfig.subject_biweekly, year_batch);
     }
     public String getCmsBiweeklyReleaseFolder(){return emailConfig.cms_biweekly_release_folder;}

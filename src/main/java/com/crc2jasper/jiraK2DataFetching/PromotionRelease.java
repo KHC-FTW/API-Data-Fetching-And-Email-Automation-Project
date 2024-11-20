@@ -2,7 +2,6 @@ package com.crc2jasper.jiraK2DataFetching;
 
 public class PromotionRelease {
     private PromotionRelease(){}
-    private final int maxNotificationCnt = 2;
     private final String standardReleaseName = "[Production]: CMS Normal Release";
     private final String releaseSender = "HA-CMS Non-Production Support Group";
     private boolean resendTmr = false;

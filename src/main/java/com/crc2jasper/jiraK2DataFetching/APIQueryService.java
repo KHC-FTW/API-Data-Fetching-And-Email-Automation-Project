@@ -1,10 +1,8 @@
 package com.crc2jasper.jiraK2DataFetching;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -23,12 +21,26 @@ public class APIQueryService {
     private static final String username = SingletonConfig.getInstance().getAdminUsername();
     private static final String password = SingletonConfig.getInstance().getAdminPassword();
     private static final String jFrogAPI = SingletonConfig.getInstance().getJfrogAPI();
+    private static final SingletonConfig singletonConfig = SingletonConfig.getInstance();
     private static final String basicAuth = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
 
-    public static void fetchJiraAPI(String jiraAPI) {
+    public static void fetchJiraUrgentServiceAPI() {
         String response = webClient
                 .get()
-                .uri(jiraAPI)
+                .uri(singletonConfig.getFullJiraAPIUrgentService())
+                .headers(headers -> headers.setBasicAuth(username, password))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        DataManip.jiraRespJsonManip(response);
+    }
+
+    public static void fetchJiraBiweeklyAPI() {
+        String response = webClient
+                .get()
+                .uri(singletonConfig.getFullJiraAPIBiweeklyPrn())
                 .headers(headers -> headers.setBasicAuth(username, password))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()

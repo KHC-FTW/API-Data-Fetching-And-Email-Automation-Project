@@ -8,12 +8,12 @@ import java.util.Set;
 public class EmailService {
 
 //    private static final String emailSubject = SingletonConfig.getInstance().getEmailSubjectUrgentService();
-    private static final String emailRecipients = SingletonConfig.getInstance().getEmailRecipients();
+    private static final SingletonConfig singletonConfig = SingletonConfig.getInstance();
     private static final AllFormData allFormData = AllFormData.getInstance();
     private static final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
 
-    public static void sendEmail(String emailSubject){
+    public static void sendUrgentServiceEmail(){
 
         Dispatch oOutlook = axOutlook.getObject();
 
@@ -25,8 +25,8 @@ public class EmailService {
                         new int[0])
                 .toDispatch();
 
-        Dispatch.put(mail, "Subject", emailSubject);
-        Dispatch.put(mail, "To", emailRecipients);
+        Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectUrgentService());
+        Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
 
         StringBuilder relatedTableContent = new StringBuilder();
         StringBuilder unrelatedTableContent = new StringBuilder();
@@ -44,16 +44,51 @@ public class EmailService {
         }
 
         int relatedCnt = allFormData.getAllRelatedEmailForms().size(), unrelatedCnt = allFormData.getAllUnrelatedEmailForms().size();
-
         String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
 
         Dispatch.put(mail, "HTMLBody", finalContent);
-
         // Set reminder properties
         Dispatch.put(mail, "ReminderSet", true);
-
         Dispatch.call(mail, "Send");
+    }
 
+    public static void sendBiweeklyEmail(){
+
+        Dispatch oOutlook = axOutlook.getObject();
+
+        Dispatch mail = Dispatch
+                .invoke(oOutlook,
+                        "CreateItem",
+                        Dispatch.Get,
+                        new Object[]{"0"},
+                        new int[0])
+                .toDispatch();
+
+        Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectBiweekly());
+        Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
+
+        StringBuilder relatedTableContent = new StringBuilder();
+        StringBuilder unrelatedTableContent = new StringBuilder();
+        if(!allFormData.getAllRelatedEmailForms().isEmpty()){
+            Set<String> allRelatedFormKeys = allFormData.getAllRelatedEmailForms().keySet();
+            for (String key: allRelatedFormKeys){
+                relatedTableContent.append(EmailHTML.genTableContent(allFormData.getRelatedEmailForm(key)));
+            }
+        }
+        if(!allFormData.getAllUnrelatedEmailForms().isEmpty()){
+            Set<String> allUnrelatedFormKeys = allFormData.getAllUnrelatedEmailForms().keySet();
+            for (String key: allUnrelatedFormKeys){
+                unrelatedTableContent.append(EmailHTML.genTableContent(allFormData.getUnrelatedEmailForm(key)));
+            }
+        }
+
+        int relatedCnt = allFormData.getAllRelatedEmailForms().size(), unrelatedCnt = allFormData.getAllUnrelatedEmailForms().size();
+        String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
+
+        Dispatch.put(mail, "HTMLBody", finalContent);
+        // Set reminder properties
+        Dispatch.put(mail, "ReminderSet", true);
+        Dispatch.call(mail, "Send");
     }
 
     public static void findLastPromotionRelease(){
@@ -148,10 +183,10 @@ public class EmailService {
     @Deprecated
     public static boolean dailyCheckNewReleaseSimulation(){
         //simulate that this is the last release item saved in the system
-        promotionRelease.setLastReleaseName("[Production]: CMS Normal Release for 2024-12 - PRD")
-                .setLastReleaseDate("25-Sep-2024")
+        promotionRelease.setLastReleaseName("[Production]: CMS Normal Release for 2024-13 - PRD")
+                .setLastReleaseDate("17-Oct-2024")
                 .setYear("2024")
-                .setBatch("12")
+                .setBatch("13")
                 .resetResendTmrStatus();
 
 
