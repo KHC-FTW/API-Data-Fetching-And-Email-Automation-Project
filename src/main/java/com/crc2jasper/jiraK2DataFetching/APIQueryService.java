@@ -34,7 +34,7 @@ public class APIQueryService {
                 .bodyToMono(String.class)
                 .block();
 
-        DataManip.jiraRespJsonManip(response);
+        DataManip.jiraRespJsonManip(response, false);
     }
 
     public static void fetchJiraBiweeklyAPI() {
@@ -47,7 +47,20 @@ public class APIQueryService {
                 .bodyToMono(String.class)
                 .block();
 
-        DataManip.jiraRespJsonManip(response);
+        DataManip.jiraRespJsonManip(response, true);
+    }
+
+    public static String fetchJiraAffectedHospAPI(String key){
+        String targetAPI = singletonConfig.getJiraRestAPI() + String.format("cf[10508]~%s&fields=customfield_11887", key);
+        String response = webClient
+                .get()
+                .uri(targetAPI)
+                .headers(headers -> headers.setBasicAuth(username, password))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return DataManip.jiraAffectedHospRespManip(response);
     }
 
     public static List<String> fetchJfrogAPI(String k2FormNo, String formSummary){

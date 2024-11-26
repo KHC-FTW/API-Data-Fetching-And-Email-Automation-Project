@@ -18,6 +18,7 @@ public class EmailForm {
 //    private String ppmType;
 //    private String key;
     private String targetDate;
+    private String affectedHosp;
     private String key;
     private String summary;
     private String description;
@@ -29,6 +30,11 @@ public class EmailForm {
 
     public EmailForm targetDate(String targetDate){
         this.targetDate = targetDate;
+        return this;
+    }
+
+    public EmailForm affectedHosp(String affectedHosp){
+        this.affectedHosp = affectedHosp;
         return this;
     }
 

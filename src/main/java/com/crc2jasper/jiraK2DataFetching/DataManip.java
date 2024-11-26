@@ -1,9 +1,11 @@
 package com.crc2jasper.jiraK2DataFetching;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 
 public class DataManip {
@@ -11,6 +13,9 @@ public class DataManip {
     private static final ObjectMapper objectMapper = SystemIni.getObjectMapper();
     private static final AllFormData allformData = AllFormData.getInstance();
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+    private static final TextSummary textSummary = TextSummary.getInstance();
+    private static final String AFFECTED_HOSP_REGEX = "\\*|Affected Hospital / Effective Date:|\\{color:.{0,8}}|\\{color\\}|\\\\u[0-9A-Fa-f]{4}\"|<[^>]*>|&[a-zA-Z0-9#]+;";
+//    private static final Pattern AFFECTED_HOSP_PATTERN = Pattern.compile(AFFECTED_HOSP_REGEX);
 
     public static String getK2FormLink(String originalLink){
 //        int length = originalLink.length();
@@ -30,8 +35,14 @@ public class DataManip {
         // -> [https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber, M-ITOCMS-24-1179]
     }
 
-    public static void jiraRespJsonManip(String jiraResp){
+    public static void jiraRespJsonManip(String jiraResp, boolean genReadMe){
         JsonNode jsonArray = null;
+        String readmePromotion;
+        String readmeAllTypes;
+        String readmeTargetHosp;
+        String readmeCrInfo;
+        String readmeStatus;
+
         try {
             jsonArray = objectMapper.readTree(jiraResp);
             JsonNode issue = jsonArray.get("issues");
@@ -65,6 +76,16 @@ public class DataManip {
                     // Jira Key e.g. ITOCMS-35743
                     String formKey = objectMapper.treeToValue(currIssue.get("key"), String.class);
 
+                    // TODO: Get target hospitals from CR ticket, extracted from description
+                    // String relatedCRTicket = extractRelatedCRTicketFromDesc(formDescription);
+                    // String jql = String.format("key = %s", relatedCRTicket);
+                    // customfield_11887
+
+                    // cf[10508]~%s&fields=customfield_11887 (%s is the jira key i.e. formKey)
+
+                    String affectedHosp = APIQueryService.fetchJiraAffectedHospAPI(formKey);
+                    if (affectedHosp.isBlank()) affectedHosp = "N/A";
+
                     // Description e.g. GCRS-564: Update worklist type for DH-PHLC specimen type
                     String formDescription = objectMapper.treeToValue(currIssue.get("fields").get("description"), String.class);
 
@@ -75,7 +96,7 @@ public class DataManip {
                         formLink = getK2FormLink(promoForm);
                         formNo = getK2FormNo(formLink);
                     }else{
-                        formNo = "Nil";
+                        formNo = "N/A";
                     }
 
                     // Status e.g. Production, QC, Pre-Production Verification, Validation, Acceptance, etc.
@@ -85,6 +106,7 @@ public class DataManip {
                     String formSummary = objectMapper.treeToValue(currIssue.get("fields").get("summary"), String.class);
 
                     emailForm.targetDate(targetDate)
+                            .affectedHosp(affectedHosp)
                             .key(formKey)
                             .summary(formSummary)
                             .description(formDescription)
@@ -132,6 +154,20 @@ public class DataManip {
                         // Belong to PPM Type, will fetch from JFrog
                         List<String> allTypePaths = APIQueryService.fetchJfrogAPI(formNo, formSummary);
                         processTypesFromPaths(allTypePaths, formSummary);
+
+                        if(genReadMe){
+                            Map<String, String> allCRResults = TextSummary.getAllCRTicketsFromDesc(formDescription);
+                            String crTickets = allCRResults.get("crTickets");
+                            String crInfo = allCRResults.get("crInfo");
+                            readmePromotion = TextSummary.abridgedSummary(formSummary) + "_" + crTickets;
+                            readmeAllTypes = TextSummary.typeMapToSetString(emailForm.getTypes());
+                            readmeTargetHosp = affectedHosp;
+                            readmeCrInfo = crInfo;
+                            readmeStatus = status;
+
+                            ReadmeItem readmeItem = new ReadmeItem(readmePromotion, readmeAllTypes, readmeTargetHosp, readmeCrInfo, status);
+                            textSummary.addReadmeItem(readmeItem);
+                        }
                     }
                 }
             }
@@ -140,8 +176,43 @@ public class DataManip {
         }
     }
 
+    public static String jiraAffectedHospRespManip(String jiraResp){
+        String result = "";
+        try {
+            JsonNode jsonArray = objectMapper.readTree(jiraResp);
+            JsonNode issues = jsonArray.get("issues");
+            if (issues != null && issues.isArray()){
+                for (JsonNode currIssue: issues){
+                    String affectedHosp = objectMapper.treeToValue(currIssue.get("fields").get("customfield_11887"), String.class);
+                    if (affectedHosp != null){
+                        if(!affectedHosp.isBlank()){
+                            String[] regexModified = affectedHosp.replaceAll(AFFECTED_HOSP_REGEX, "")
+                                    .replaceAll("[{}]", "")
+                                    .split("(\r\n|\r|\n)");
+                            List<String> relevant = new ArrayList<>();
+                            for(String line: regexModified){
+                                line = line.replaceAll("[\\s|\\u00A0]+", " ").strip();
+                                if(!line.isBlank()){
+                                    relevant.add(line);
+                                }
+                            }
+                            return String.join("\n", relevant);
+                        }
 
-
+//                                .replaceAll("(\r\n|\r|\n)+", "\n")
+//                                .replaceAll("(\\{|}|^\\s*$)", "")
+//                                .replaceAll("[\\s+|\\u00A0]", " ")
+//                                .replaceAll("[<>]", "*")
+////                                .replaceAll("(?<=\\p{Alpha})\\*", "*\n")
+//                                .strip();
+                    }
+                }
+            }
+        } catch (JsonProcessingException e) {
+            System.out.println("Exception raised when fetching Jira affected hospitals: " + e.getMessage() + "\n");
+        }
+        return result;
+    }
 
     public static List<String> jFrogRespJsonManip(String formSummary, String jFrogResp){
         JsonNode jsonArray = null;

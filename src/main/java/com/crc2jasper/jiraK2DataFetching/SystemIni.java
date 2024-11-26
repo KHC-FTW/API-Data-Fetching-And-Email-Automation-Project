@@ -21,16 +21,17 @@ public class SystemIni {
 
     public static void readJsonConfigFile(String[] args){
         File jsonFile;
+        String jsonPath;
         if (args.length < 1 || !(jsonFile = new File(args[0] + "\\SetUpConfig.json")).isFile()){
             Scanner getInput = new Scanner(System.in);
-            String jsonPath;
             do{
                 System.out.print("\nNo valid json file identified for set up. Please enter the json file path again.\n(Make sure the json file is named \"SetUpConfig.json\")\n> ");
                 jsonPath = getInput.nextLine();
                 jsonFile = new File(jsonPath + "\\SetUpConfig.json");
             }while(!jsonFile.isFile());
-        }
+        }else jsonPath = args[0];
 
+        SingletonConfig.setIniInputPath(jsonPath);
         SingletonConfig.setJsonFile(jsonFile);
 
         try {

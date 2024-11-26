@@ -9,9 +9,10 @@ public class EmailScheduler {
     private static final SingletonConfig singletonConfig = SingletonConfig.getInstance();
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
     private static final AllFormData allFormData = AllFormData.getInstance();
+    private static final TextSummary textSummary = TextSummary.getInstance();
 
 
-//    @Scheduled(cron = "*/30 * * * * *")
+//    @Scheduled(cron = "*/10 * * * * *")
 
     // Start at 17:00 every day
     @Scheduled(cron = "0 0 17 * * *")
@@ -66,7 +67,8 @@ public class EmailScheduler {
         }
     }
 
-    @Deprecated
+//    @Deprecated
+//    @Scheduled(cron = "*/10 * * * * *")
     public static void simulateSendBiweeklyEmail(){
         if(EmailService.dailyCheckNewReleaseSimulation()){
             String rawJiraAPI = singletonConfig.getRawJiraAPIBiweeklyPrn();
@@ -80,9 +82,13 @@ public class EmailScheduler {
 
             allFormData.clearAllEmailFormData();
             APIQueryService.fetchJiraBiweeklyAPI();
+            TextSummary.writeReadMeTxt(textSummary.genReadMeContent());
+            textSummary.clearAllReadmeItems();
             EmailService.sendBiweeklyEmail();
             promotionRelease.setToResendTmr();
             allFormData.clearAllEmailFormData();
+            textSummary.clearAllReadmeItems();
+            TextSummary.deleteReadMeTxt();
         }
     }
 }

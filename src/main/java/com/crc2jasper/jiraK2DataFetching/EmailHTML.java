@@ -43,6 +43,7 @@ public class EmailHTML {
                     <table id="t01">
                         <tr>
                             <th max-width="110">Target Date</th>
+                            <th max-width="110">Affected Hospital</th>
                             <th width="130">Summary</th>
                             <th max-width="300">Description</th>
                             <th width="155">Promotion Form</th>
@@ -57,6 +58,7 @@ public class EmailHTML {
                     <table id="t02">
                         <tr>
                             <th max-width="110">Target Date</th>
+                            <th max-width="110">Affected Hospital</th>
                             <th width="130">Summary</th>
                             <th max-width="300">Description</th>
                             <th width="155">Promotion Form</th>
@@ -77,6 +79,7 @@ public class EmailHTML {
         return String.format("""
                 <tr%s>
                   	 <td>%s</td>
+                  	 <td>%s</td>
                   	 <td><a href="https://hatool.home/jira/browse/%s" target="_blank">%s</a></td>
                   	 <td>%s</td>
                   	 <td><a href="%s" target="_blank">%s</td>
@@ -86,6 +89,7 @@ public class EmailHTML {
                 """,
                 addStyle,
                 dateHighlight(emailForm.getTargetDate()),
+                replaceWithHTMLbrTag(emailForm.getAffectedHosp()),
                 emailForm.getKey(),
                 emailForm.getSummary(),
                 replaceWithHTMLbrTag(emailForm.getDescription()),
@@ -104,7 +108,7 @@ public class EmailHTML {
     }
 
     private static String replaceWithHTMLbrTag(String input){
-        return input.replaceAll("\n", "<br>");
+        return input.replaceAll("(\r\n|\r|\n)", "<br>");
     }
 
     private static String formatType(Map<Integer, String> emailFormTypes){

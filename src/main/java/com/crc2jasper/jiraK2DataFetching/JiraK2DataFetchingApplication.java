@@ -9,8 +9,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class JiraK2DataFetchingApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(JiraK2DataFetchingApplication.class, args);
 		SystemIni.readJsonConfigFile(args);
 		SystemIni.setupPromotionReleaseConfig();
+//		EmailScheduler.simulateSendBiweeklyEmail();
+		SpringApplication.run(JiraK2DataFetchingApplication.class, args);
 	}
 }

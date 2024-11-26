@@ -86,6 +86,11 @@ public class EmailService {
         String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
 
         Dispatch.put(mail, "HTMLBody", finalContent);
+
+        // Attach a document
+        Dispatch attachments = Dispatch.get(mail, "Attachments").toDispatch();
+        Dispatch.call(attachments, "Add", SingletonConfig.getIniInputPath() + "\\Readme.txt");
+
         // Set reminder properties
         Dispatch.put(mail, "ReminderSet", true);
         Dispatch.call(mail, "Send");
@@ -183,10 +188,10 @@ public class EmailService {
     @Deprecated
     public static boolean dailyCheckNewReleaseSimulation(){
         //simulate that this is the last release item saved in the system
-        promotionRelease.setLastReleaseName("[Production]: CMS Normal Release for 2024-13 - PRD")
-                .setLastReleaseDate("17-Oct-2024")
-                .setYear("2024")
-                .setBatch("13")
+        promotionRelease.setLastReleaseName("[Production]: CMS Normal Release for 2024-01 - PRD")
+                .setLastReleaseDate("01-Jan-2024")
+                .setYear("2020")
+                .setBatch("01")
                 .resetResendTmrStatus();
 
 

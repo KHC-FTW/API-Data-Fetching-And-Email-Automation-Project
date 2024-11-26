@@ -1,5 +1,6 @@
 package com.crc2jasper.jiraK2DataFetching;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,8 @@ import java.io.File;
 public class SingletonConfig {
     private SingletonConfig(){}
     private static SingletonConfig singletonAPIConfig = new SingletonConfig();
+    @JsonIgnore
+    private static String iniInputPath;
     private static File jsonFile;
     public static SingletonConfig getInstance(){return singletonAPIConfig;}
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
@@ -82,6 +85,8 @@ public class SingletonConfig {
 
     public static void setJsonFile(File jsonFile){SingletonConfig.jsonFile = jsonFile;}
     public static File getJsonFile(){return SingletonConfig.jsonFile;}
+    public static void setIniInputPath(String path){SingletonConfig.iniInputPath = path;}
+    public static String getIniInputPath(){return SingletonConfig.iniInputPath;}
 
     public static void updateSingletonConfig(SingletonConfig newSingletonConfig){
         singletonAPIConfig = newSingletonConfig;
@@ -92,6 +97,7 @@ public class SingletonConfig {
     public String getAdminPassword(){return admin.password;}
     public String getAdminEmail(){return admin.email;}
 
+    public String getJiraRestAPI(){return apiConfig.jiraAPI;}
     public String getFullJiraAPIUrgentService(){return apiConfig.jiraAPI + apiConfig.jql_urgent_service + apiConfig.jiraFields;}
     public String getRawJiraAPIBiweeklyPrn(){return apiConfig.jiraAPI + apiConfig.jql_biweekly_prn + apiConfig.jiraFields;}
     public String getFullJiraAPIBiweeklyPrn(){
