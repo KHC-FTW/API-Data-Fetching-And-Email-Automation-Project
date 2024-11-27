@@ -29,20 +29,9 @@ public class EmailScheduler {
     @Scheduled(cron = "0 30 17 * * *")
     public static void sendBiweeklyEmail(){
         if(EmailService.dailyCheckForNewRelease()){
-            String rawJiraAPI = singletonConfig.getRawJiraAPIBiweeklyPrn();
-            String year = promotionRelease.getYear();   //2024
-            String batch = promotionRelease.getBatch(); //13
-            String year_batch = year + "_" + batch; //2024-13
-            String polishedJiraAPI = String.format(rawJiraAPI, year_batch, year);
-            // https://hatool.home/jira/rest/api/2/search?jql=
-            // + project = ITOCMS AND summary ~ "PPM%s*" OR (summary ~ "PRN%s*" AND created >= -60d) AND "Promotion Schedule" is not EMPTY ORDER BY summary
-            // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500
-
-            allFormData.clearAllEmailFormData();
-            APIQueryService.fetchJiraBiweeklyAPI();
-            EmailService.sendBiweeklyEmail();
+            eventSequenceBiweekly();
+            // Set the flag to resend the email tomorrow
             promotionRelease.setToResendTmr();
-            allFormData.clearAllEmailFormData();
         }
     }
 
@@ -50,20 +39,9 @@ public class EmailScheduler {
     @Scheduled(cron = "0 0 9 * * *")
     public static void resendBiweeklyEmail(){
         if(promotionRelease.getResendTmrStatus()){
-            String rawJiraAPI = singletonConfig.getRawJiraAPIBiweeklyPrn();
-            String year = promotionRelease.getYear();   //2024
-            String batch = promotionRelease.getBatch(); //13
-            String year_batch = year + "_" + batch; //2024-13
-            String polishedJiraAPI = String.format(rawJiraAPI, year_batch, year);
-            // https://hatool.home/jira/rest/api/2/search?jql=
-            // + project = ITOCMS AND summary ~ "PPM%s*" OR (summary ~ "PRN%s*" AND created >= -60d) AND "Promotion Schedule" is not EMPTY ORDER BY summary
-            // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500
-
-            allFormData.clearAllEmailFormData();
-            APIQueryService.fetchJiraBiweeklyAPI();
-            EmailService.sendBiweeklyEmail();
+            eventSequenceBiweekly();
+            // Disable resend
             promotionRelease.resetResendTmrStatus();
-            allFormData.clearAllEmailFormData();
         }
     }
 
@@ -71,24 +49,26 @@ public class EmailScheduler {
 //    @Scheduled(cron = "*/10 * * * * *")
     public static void simulateSendBiweeklyEmail(){
         if(EmailService.dailyCheckNewReleaseSimulation()){
-            String rawJiraAPI = singletonConfig.getRawJiraAPIBiweeklyPrn();
-            String year = promotionRelease.getYear();   //2024
-            String batch = promotionRelease.getBatch(); //13
-            String year_batch = year + "_" + batch; //2024-13
-            String polishedJiraAPI = String.format(rawJiraAPI, year_batch, year);
-            // https://hatool.home/jira/rest/api/2/search?jql=
-            // + project = ITOCMS AND summary ~ "PPM%s*" OR (summary ~ "PRN%s*" AND created >= -60d) AND "Promotion Schedule" is not EMPTY ORDER BY summary
-            // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500
-
-            allFormData.clearAllEmailFormData();
-            APIQueryService.fetchJiraBiweeklyAPI();
-            TextSummary.writeReadMeTxt(textSummary.genReadMeContent());
-            textSummary.clearAllReadmeItems();
-            EmailService.sendBiweeklyEmail();
+            eventSequenceBiweekly();
+            // Set the flag to resend the email tomorrow
             promotionRelease.setToResendTmr();
-            allFormData.clearAllEmailFormData();
-            textSummary.clearAllReadmeItems();
-            TextSummary.deleteReadMeTxt();
         }
     }
+
+    private static void eventSequenceBiweekly(){
+        // 1. Make sure we start anew
+        allFormData.clearAllEmailFormData();
+        // 2. Start API call
+        APIQueryService.fetchJiraBiweeklyAPI();
+        // 3. Generate Readme content and save it to a local temp location
+        TextSummary.writeReadMeTxt(textSummary.genReadMeContent());
+        // 4. Send email with Readme attached
+        EmailService.sendBiweeklyEmail();
+        // 5. Clear all saved data first to avoid unwanted data are left behind
+        allFormData.clearAllEmailFormData();
+        textSummary.clearAllReadmeItems();
+        // 6. Delete the temporarily saved Readme file
+        TextSummary.deleteReadMeTxt();
+    }
+
 }

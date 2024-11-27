@@ -101,6 +101,9 @@ public class SingletonConfig {
     public String getFullJiraAPIUrgentService(){return apiConfig.jiraAPI + apiConfig.jql_urgent_service + apiConfig.jiraFields;}
     public String getRawJiraAPIBiweeklyPrn(){return apiConfig.jiraAPI + apiConfig.jql_biweekly_prn + apiConfig.jiraFields;}
     public String getFullJiraAPIBiweeklyPrn(){
+        // https://hatool.home/jira/rest/api/2/search?jql=
+        // + project = ITOCMS AND summary ~ "PPM%s*" OR (summary ~ "PRN%s*" AND created >= -60d) AND "Promotion Schedule" is not EMPTY ORDER BY summary
+        // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500&fields=customfield_11887
         String year = promotionRelease.getYear();   //e.g. 2024
         String year_batch = year + "_" + promotionRelease.getBatch();   //e.g. 2024_13
         return apiConfig.jiraAPI + String.format(apiConfig.jql_biweekly_prn, year_batch, year) + apiConfig.jiraFields;

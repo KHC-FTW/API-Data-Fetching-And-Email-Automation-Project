@@ -63,6 +63,20 @@ public class APIQueryService {
         return DataManip.jiraAffectedHospRespManip(response);
     }
 
+    public static String fetchCrLinkedSummary(String endingCrTicket){
+        // cf[11599]~NDORS-705&fields=summary
+        String targetAPI = singletonConfig.getJiraRestAPI() + String.format("cf[11599]~%s&fields=summary", endingCrTicket);
+        String response = webClient
+                .get()
+                .uri(targetAPI)
+                .headers(headers -> headers.setBasicAuth(username, password))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return DataManip.jiraCRLinkedSummaryManip(response);
+    }
+
     public static List<String> fetchJfrogAPI(String k2FormNo, String formSummary){
         String json = String.format("""
                       items.find(

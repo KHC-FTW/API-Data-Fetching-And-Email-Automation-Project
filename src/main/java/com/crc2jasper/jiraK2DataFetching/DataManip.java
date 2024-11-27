@@ -156,7 +156,7 @@ public class DataManip {
                         processTypesFromPaths(allTypePaths, formSummary);
 
                         if(genReadMe){
-                            Map<String, String> allCRResults = TextSummary.getAllCRTicketsFromDesc(formDescription);
+                            Map<String, String> allCRResults = TextSummary.getAllCRTicketsFromDesc(formSummary, formDescription);
                             String crTickets = allCRResults.get("crTickets");
                             String crInfo = allCRResults.get("crInfo");
                             readmePromotion = TextSummary.abridgedSummary(formSummary) + "_" + crTickets;
@@ -165,7 +165,7 @@ public class DataManip {
                             readmeCrInfo = crInfo;
                             readmeStatus = status;
 
-                            ReadmeItem readmeItem = new ReadmeItem(readmePromotion, readmeAllTypes, readmeTargetHosp, readmeCrInfo, status);
+                            ReadmeItem readmeItem = new ReadmeItem(readmePromotion, readmeAllTypes, readmeTargetHosp, readmeCrInfo, readmeStatus);
                             textSummary.addReadmeItem(readmeItem);
                         }
                     }
@@ -174,6 +174,27 @@ public class DataManip {
         } catch (Exception e) {
             System.out.println(e.getMessage() + "\n");
         }
+    }
+
+    public static String jiraCRLinkedSummaryManip(String jiraResp){
+        // from the following jql: e.g. jql=cf[11599]~ENOTI-380&fields=summary
+        String result = "";
+        try {
+            JsonNode jsonArray = objectMapper.readTree(jiraResp);
+            JsonNode issues = jsonArray.get("issues");
+            if (issues != null && issues.isArray()){
+                for (JsonNode currIssue: issues){
+                    String summary = objectMapper.treeToValue(currIssue.get("fields").get("summary"), String.class);
+                    if (summary != null) {
+                        return summary;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Exception raised when fetching Jira CR linked summary: " + e.getMessage() + "\n");
+            return result;
+        }
+        return result;
     }
 
     public static String jiraAffectedHospRespManip(String jiraResp){

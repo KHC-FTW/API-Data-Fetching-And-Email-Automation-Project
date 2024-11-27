@@ -50,7 +50,10 @@ public class TextSummary {
                     }
                 }
                 if (!item.getCrInfo().isBlank()){
-                    content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", item.getCrInfo()));
+                    String[] crParts = item.getCrInfo().split(";");
+                    for (String part: crParts){
+                        content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part.strip()));
+                    }
                 }
             }
         }
@@ -94,7 +97,7 @@ public class TextSummary {
         return false;
     }
 
-    public static Map<String, String> getAllCRTicketsFromDesc(String description) {
+    public static Map<String, String> getAllCRTicketsFromDesc(String formSummary, String description) {
         /*  Example:
 
             VTS-257: To provide customization of preset vital signs routine order for newly admitted patients at CMS e-Vitals Maintenance page.
@@ -128,9 +131,13 @@ public class TextSummary {
             }
             if (hasCRInfo && !line.isBlank()) {crInfo.add(line);}
         }
-        String crTicketString = String.join(", ", crTickets), crInfoString = String.join(", ", crInfo);
+        String crTicketString = String.join(", ", crTickets);
         allResults.put("crTickets", crTicketString);
-        allResults.put("crInfo", crInfoString);
+        if (!crInfo.isEmpty()){
+            allResults.put("crInfo", CRInfo.compileAllCrInfo(crInfo));
+        }else{
+            allResults.put("crInfo", "");
+        }
         return allResults;
     }
 
