@@ -14,7 +14,8 @@ public class DataManip {
     private static final AllFormData allformData = AllFormData.getInstance();
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
     private static final TextSummary textSummary = TextSummary.getInstance();
-    private static final String AFFECTED_HOSP_REGEX = "\\*|Affected Hospital / Effective Date:|\\{color:.{0,8}}|\\{color\\}|\\\\u[0-9A-Fa-f]{4}\"|<[^>]*>|&[a-zA-Z0-9#]+;";
+    private static final String AFFECTED_HOSP_REGEX = "(Affected Hospital|Effective Date).|\\{color:.{0,8}}|\\{color}|\\\\u[0-9A-Fa-f]{4}\"|<[^>]*>|&[a-zA-Z0-9#]+;|[*{}]";
+//    private static final String AFFECTED_HOSP_REGEX = "\\*|Affected Hospital / Effective Date:|\\{color:.{0,8}}|\\{color\\}|\\\\u[0-9A-Fa-f]{4}\"|<[^>]*>|&[a-zA-Z0-9#]+;";
 //    private static final Pattern AFFECTED_HOSP_PATTERN = Pattern.compile(AFFECTED_HOSP_REGEX);
 
     public static String getK2FormLink(String originalLink){
@@ -68,10 +69,13 @@ public class DataManip {
                         isToday = TimeUtil.checkIsToday(targetDate);
                         targetDate = TimeUtil.dateDayOfWeekFormatter(targetDate);
                     }else{  //likely batch release, format the date to be that batch e.g. 2024-13
-                        String year = promotionRelease.getYear();
-                        String batch = promotionRelease.getBatch();
-                        String year_batch = year + "-" + batch;
-                        targetDate = year_batch;
+//                        String year = promotionRelease.getYear();
+//                        String batch = promotionRelease.getBatch();
+//                        String year_batch = year + "-" + batch;
+//                        targetDate = year_batch;
+                        // not necessary to format the target date for batch release
+                        // since it will not be in the final email table
+                        targetDate = "";
                     }
                     // Jira Key e.g. ITOCMS-35743
                     String formKey = objectMapper.treeToValue(currIssue.get("key"), String.class);
@@ -207,29 +211,21 @@ public class DataManip {
                     String affectedHosp = objectMapper.treeToValue(currIssue.get("fields").get("customfield_11887"), String.class);
                     if (affectedHosp != null){
                         if(!affectedHosp.isBlank()){
-                            String[] regexModified = affectedHosp.replaceAll(AFFECTED_HOSP_REGEX, "")
-                                    .replaceAll("[{}]", "")
+                            String[] regexModified = affectedHosp
+                                    .replaceAll(AFFECTED_HOSP_REGEX, "")
                                     .split("(\r\n|\r|\n)");
                             List<String> relevant = new ArrayList<>();
                             for(String line: regexModified){
-                                line = line.replaceAll("[\\s|\\u00A0]+", " ").strip();
-                                if(!line.isBlank()){
-                                    relevant.add(line);
-                                }
+                                line = line.replaceAll("[\\s\\u00A0]+", " ").strip();
+                                if(line.matches("\\W+") || line.isBlank()) continue;
+                                relevant.add(line);
                             }
                             return String.join("\n", relevant);
                         }
-
-//                                .replaceAll("(\r\n|\r|\n)+", "\n")
-//                                .replaceAll("(\\{|}|^\\s*$)", "")
-//                                .replaceAll("[\\s+|\\u00A0]", " ")
-//                                .replaceAll("[<>]", "*")
-////                                .replaceAll("(?<=\\p{Alpha})\\*", "*\n")
-//                                .strip();
                     }
                 }
             }
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             System.out.println("Exception raised when fetching Jira affected hospitals: " + e.getMessage() + "\n");
         }
         return result;

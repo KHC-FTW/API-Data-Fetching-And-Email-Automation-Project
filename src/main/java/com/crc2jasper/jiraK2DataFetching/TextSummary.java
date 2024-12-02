@@ -9,6 +9,7 @@ public class TextSummary {
     private TextSummary(){}
     private static final TextSummary textSummary = new TextSummary();
     private final List<ReadmeItem> allReadMeItems = new ArrayList<>();
+    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
 
     public static TextSummary getInstance(){return textSummary;}
     public void addReadmeItem(ReadmeItem readmeItem){
@@ -33,6 +34,7 @@ public class TextSummary {
         final int LONGEST_COL_WIDTH = getLongestColWidth();
         StringBuilder content = new StringBuilder(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "Promotion", "Remark"))
                 .append("-".repeat(LONGEST_COL_WIDTH * 3)).append("\n");
+        String year_batch = promotionRelease.getYear() + "-" + promotionRelease.getBatch();
         for (ReadmeItem item: allReadMeItems){
             String status = item.getStatus();
             if(status.equalsIgnoreCase("Withdrawn")){
@@ -46,7 +48,9 @@ public class TextSummary {
                 if (!item.getTargetHosp().isBlank() && !item.getTargetHosp().equalsIgnoreCase("N/A")){
                     String[] parts = item.getTargetHosp().split("\n");
                     for(String part: parts){
-                        content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part));
+                        if (!part.isBlank()) {
+                            content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part));
+                        }
                     }
                 }
                 if (!item.getCrInfo().isBlank()){

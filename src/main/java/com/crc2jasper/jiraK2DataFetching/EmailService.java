@@ -33,18 +33,23 @@ public class EmailService {
         if(!allFormData.getAllRelatedEmailForms().isEmpty()){
             Set<String> allRelatedFormKeys = allFormData.getAllRelatedEmailForms().keySet();
             for (String key: allRelatedFormKeys){
-                relatedTableContent.append(EmailHTML.genTableContent(allFormData.getRelatedEmailForm(key)));
+                relatedTableContent.append(EmailHTML.genTableRowContent(allFormData.getRelatedEmailForm(key), true));
             }
         }
         if(!allFormData.getAllUnrelatedEmailForms().isEmpty()){
             Set<String> allUnrelatedFormKeys = allFormData.getAllUnrelatedEmailForms().keySet();
             for (String key: allUnrelatedFormKeys){
-                unrelatedTableContent.append(EmailHTML.genTableContent(allFormData.getUnrelatedEmailForm(key)));
+                unrelatedTableContent.append(EmailHTML.genTableRowContent(allFormData.getUnrelatedEmailForm(key), true));
             }
         }
 
         int relatedCnt = allFormData.getAllRelatedEmailForms().size(), unrelatedCnt = allFormData.getAllUnrelatedEmailForms().size();
-        String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
+//        String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
+        String finalContent = EmailHTML.dynamicEmailHTMLDom(
+                relatedCnt,
+                relatedTableContent.toString(),
+                unrelatedCnt, unrelatedTableContent.toString(),
+                true);
 
         Dispatch.put(mail, "HTMLBody", finalContent);
         // Set reminder properties
@@ -72,19 +77,23 @@ public class EmailService {
         if(!allFormData.getAllRelatedEmailForms().isEmpty()){
             Set<String> allRelatedFormKeys = allFormData.getAllRelatedEmailForms().keySet();
             for (String key: allRelatedFormKeys){
-                relatedTableContent.append(EmailHTML.genTableContent(allFormData.getRelatedEmailForm(key)));
+                relatedTableContent.append(EmailHTML.genTableRowContent(allFormData.getRelatedEmailForm(key), false));
             }
         }
         if(!allFormData.getAllUnrelatedEmailForms().isEmpty()){
             Set<String> allUnrelatedFormKeys = allFormData.getAllUnrelatedEmailForms().keySet();
             for (String key: allUnrelatedFormKeys){
-                unrelatedTableContent.append(EmailHTML.genTableContent(allFormData.getUnrelatedEmailForm(key)));
+                unrelatedTableContent.append(EmailHTML.genTableRowContent(allFormData.getUnrelatedEmailForm(key), false));
             }
         }
 
         int relatedCnt = allFormData.getAllRelatedEmailForms().size(), unrelatedCnt = allFormData.getAllUnrelatedEmailForms().size();
-        String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
-
+//        String finalContent = EmailHTML.emailHTMLDom(relatedCnt, relatedTableContent.toString(), unrelatedCnt, unrelatedTableContent.toString());
+        String finalContent = EmailHTML.dynamicEmailHTMLDom(
+                relatedCnt,
+                relatedTableContent.toString(),
+                unrelatedCnt, unrelatedTableContent.toString(),
+                false);
         Dispatch.put(mail, "HTMLBody", finalContent);
 
         // Attach a document
