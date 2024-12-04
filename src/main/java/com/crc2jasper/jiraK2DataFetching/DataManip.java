@@ -30,7 +30,7 @@ public class DataManip {
 
     public static String getK2FormNo(String formLink){
         String[] parts = formLink.split("=");
-        return parts[1];
+        return parts[1].replaceAll("(\r|\n|\r\n)", "");
         //                                                                            v
         // e.g. https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber=M-ITOCMS-24-1179
         // -> [https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber, M-ITOCMS-24-1179]
