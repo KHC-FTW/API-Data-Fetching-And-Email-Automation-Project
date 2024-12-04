@@ -241,13 +241,13 @@ public class DataManip {
                 boolean hasAnyImpHospOrCorp = false;
                 for (JsonNode currResult: results){
                     String path = objectMapper.treeToValue(currResult.get("path"), String.class);
-                    // path e.g. CMS/SWR/CMS_SWR_PROGRESS_NOTE_SVC_JDK8/M-ITOCMS-24-1065/FB_020_corp-db_InsertCorpForwarder/DB_SERVER_LIST_CORP/corp
+                    // path e.g. CMS/OPMOE/CMS_MOE_CMSAF_APP_JDK8/M-ITOCMS-24-1232/DP_40_corp-db_UpdateForwarder/DB_SERVER_LIST_CORP/corp
                     String[] pathParts = path.split("/");
                     int pathSize = pathParts.length;
                     int keyIndex = getTypeIndexFromJFrogPathParts(pathParts);
-                    if (keyIndex >= 0 && keyIndex < pathSize && pathParts[keyIndex].contains("DP")){
+                    if (keyIndex >= 0 && keyIndex < pathSize){ // && pathParts[keyIndex].contains("DP") -> not necessary due to revised API payload
                         allTypePaths.add(pathParts[keyIndex]);
-                    }
+                    }else allTypePaths.add("N/A");  // actually, if the program is working fine, shouldn't have N/A at all
                 }
             }
         } catch (Exception e) {

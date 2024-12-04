@@ -82,10 +82,12 @@ public class APIQueryService {
                       items.find(
                         {
                             "repo": {"$eq": "cms_cicd_package"},
-                            "path": {"$match": "*%s*"}
+                            "path": {"$match": "*%s*"},
+                            "path": {"$match": "*DP_*"}
                         }
                       )
                       """, k2FormNo);
+        // revised payload to include "path": {"$match": "*DP_*"} -> more specific json data can be returned
 
         String response = webClient
                 .post()

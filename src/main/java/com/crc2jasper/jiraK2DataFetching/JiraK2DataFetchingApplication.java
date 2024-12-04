@@ -11,7 +11,11 @@ public class JiraK2DataFetchingApplication {
 	public static void main(String[] args) {
 		SystemIni.readJsonConfigFile(args);
 		SystemIni.setupPromotionReleaseConfig();
-//		EmailScheduler.simulateSendBiweeklyEmail();
 		SpringApplication.run(JiraK2DataFetchingApplication.class, args);
+		/*
+		* For quick test purposes
+		* */
+		/*EmailScheduler.sendUrgentServiceEmail();
+		EmailScheduler.simulateSendBiweeklyEmail();*/
 	}
 }
