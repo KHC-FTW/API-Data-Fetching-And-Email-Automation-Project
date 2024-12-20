@@ -98,7 +98,10 @@ public class EmailService {
 
         // Attach a document
         Dispatch attachments = Dispatch.get(mail, "Attachments").toDispatch();
-        Dispatch.call(attachments, "Add", SingletonConfig.getIniInputPath() + "\\Readme.txt");
+        String zipFilePath = ZipService.getZipFilePath();
+        if (!zipFilePath.isBlank()){
+            Dispatch.call(attachments, "Add", zipFilePath);
+        }
 
         // Set reminder properties
         Dispatch.put(mail, "ReminderSet", true);

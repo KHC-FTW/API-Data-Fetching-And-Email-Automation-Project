@@ -15,7 +15,7 @@ public class JiraK2DataFetchingApplication {
 		/*
 		* For quick test purposes
 		* */
-		/*EmailScheduler.sendUrgentServiceEmail();
-		EmailScheduler.simulateSendBiweeklyEmail();*/
+//		EmailScheduler.sendUrgentServiceEmail();
+//		EmailScheduler.simulateSendBiweeklyEmail();
 	}
 }

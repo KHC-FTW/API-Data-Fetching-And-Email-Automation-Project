@@ -1,11 +1,9 @@
 package com.crc2jasper.jiraK2DataFetching;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 
 public class DataManip {
@@ -21,16 +19,16 @@ public class DataManip {
     public static String getK2FormLink(String originalLink){
 //        int length = originalLink.length();
         try{
-            return originalLink.substring("Promotion Form: ".length(), originalLink.indexOf("\n"));
+            return originalLink.substring("Promotion Form: ".length(), originalLink.indexOf("\n")).replaceAll("(\r|\n|\r\n)", "");
         }catch(StringIndexOutOfBoundsException e) {
-            return originalLink.substring("Promotion Form: ".length());
+            return originalLink.substring("Promotion Form: ".length()).replaceAll("(\r|\n|\r\n)", "");
             // likely the link does not have any \n at the end
         }
     }
 
     public static String getK2FormNo(String formLink){
         String[] parts = formLink.split("=");
-        return parts[1].replaceAll("(\r|\n|\r\n)", "");
+        return parts[1];
         //                                                                            v
         // e.g. https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber=M-ITOCMS-24-1179
         // -> [https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber, M-ITOCMS-24-1179]
@@ -106,7 +104,7 @@ public class DataManip {
                     // Status e.g. Production, QC, Pre-Production Verification, Validation, Acceptance, etc.
                     String status = objectMapper.treeToValue(currIssue.get("fields").get("status").get("name"), String.class);
 
-                    // Summary e.g. PPM2024_S0306, PRN2024_RG0089
+                    // Summary e.g. PPM2024_S0306, PPM2024_13002, PRN2024_RG0089
                     String formSummary = objectMapper.treeToValue(currIssue.get("fields").get("summary"), String.class);
 
                     emailForm.targetDate(targetDate)
@@ -159,18 +157,19 @@ public class DataManip {
                         List<String> allTypePaths = APIQueryService.fetchJfrogAPI(formNo, formSummary);
                         processTypesFromPaths(allTypePaths, formSummary);
 
-                        if(genReadMe){
-                            Map<String, String> allCRResults = TextSummary.getAllCRTicketsFromDesc(formSummary, formDescription);
-                            String crTickets = allCRResults.get("crTickets");
-                            String crInfo = allCRResults.get("crInfo");
+                        if(genReadMe){  // only biweekly will gen readme file, urgent/service won't
+//                            Map<String, String> allCRResults =
+                            String crTickets = TextSummary.getAllCRTicketsFromDesc(formSummary, formDescription);
+                            String linkedIssues = CRInfo.getLinkedIssues(formSummary);
+//                            String crInfo = allCRResults.get("crInfo");
                             readmePromotion = TextSummary.abridgedSummary(formSummary) + "_" + crTickets;
                             readmeAllTypes = TextSummary.typeMapToSetString(emailForm.getTypes());
                             readmeTargetHosp = affectedHosp;
-                            readmeCrInfo = crInfo;
+//                            readmeCrInfo = crInfo;
                             readmeStatus = status;
 
-                            ReadmeItem readmeItem = new ReadmeItem(readmePromotion, readmeAllTypes, readmeTargetHosp, readmeCrInfo, readmeStatus);
-                            textSummary.addReadmeItem(readmeItem);
+                            ReadmeItemPPM readmeItemPPM = new ReadmeItemPPM(formSummary, readmePromotion, readmeAllTypes, readmeTargetHosp, linkedIssues, formNo, readmeStatus);
+                            textSummary.addReadmeItemPPM(readmeItemPPM);
                         }
                     }
                 }
@@ -211,16 +210,7 @@ public class DataManip {
                     String affectedHosp = objectMapper.treeToValue(currIssue.get("fields").get("customfield_11887"), String.class);
                     if (affectedHosp != null){
                         if(!affectedHosp.isBlank()){
-                            String[] regexModified = affectedHosp
-                                    .replaceAll(AFFECTED_HOSP_REGEX, "")
-                                    .split("(\r\n|\r|\n)");
-                            List<String> relevant = new ArrayList<>();
-                            for(String line: regexModified){
-                                line = line.replaceAll("[\\s\\u00A0]+", " ").strip();
-                                if(line.matches("\\W+") || line.isBlank()) continue;
-                                relevant.add(line);
-                            }
-                            return String.join("\n", relevant);
+                            return regexModifyRawAffectedHospData(affectedHosp);
                         }
                     }
                 }
@@ -230,6 +220,106 @@ public class DataManip {
         }
         return result;
     }
+
+    private static String regexModifyRawAffectedHospData(String affectedHosp) {
+        String[] regexModified = affectedHosp
+                .replaceAll(AFFECTED_HOSP_REGEX, "")
+                .split("(\r\n|\r|\n)");
+        List<String> relevant = new ArrayList<>();
+        for(String line: regexModified){
+            line = line.replaceAll("[\\s\\u00A0]+", " ").strip();
+            if(line.matches("\\W+") || line.isBlank()) continue;
+            relevant.add(line);
+        }
+        return String.join("\n", relevant);
+    }
+
+    public static void jiraUrgentServiceForBiweeklyRespManip(String jiraResp){
+        try {
+            JsonNode jsonArray = objectMapper.readTree(jiraResp);
+            JsonNode issues = jsonArray.get("issues");
+            if (issues != null && issues.isArray()){
+                for (JsonNode currIssue: issues){
+                    // "customfield_11400": "https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber=M-ITOCMS-24-1244"
+                    JsonNode fields = currIssue.get("fields");
+                    String promoLink = objectMapper.treeToValue(fields.get("customfield_11400"), String.class);
+                    String formNo = getK2FormNo(promoLink);
+                    // Here, with the form no. e.g. M-ITOCMS-24-1244, we have to fetch JFrog for the types
+                    List<String> allTypePaths = APIQueryService.fetchJfrogAPI(formNo, "");
+                    // TODO: process the types from the fetched JFrog data
+                    boolean isHospOrCorp = false;
+                    Map<Integer, String> seqTypeMap = new TreeMap<>();
+                    for (String typePath: allTypePaths) {
+                        // process the types
+                        String[] seq_type = extractTypeFromPath(typePath);
+                        // ["40", "corp-db"]
+                        if (isImpHospOrImpCorp(seq_type[1])) {
+                            isHospOrCorp = true;
+                        }
+                        seqTypeMap.put(Integer.parseInt(seq_type[0]), seq_type[1]);
+                    }
+                    if(isHospOrCorp){
+
+                        // if imp-hosp or imp-corp, will further retrieve the following:
+                        // - PPM no.
+                        String ITOCMS_PPM = objectMapper.treeToValue(fields.get("customfield_10508"), String.class);
+                        // e.g. ITOCMS-35975, PPM2024_U0237
+                        // Note: PPM may be empty, only ITOCMS appears in the field
+                        String ppmNo = extractPPMNo(ITOCMS_PPM);
+
+                        // - CR tickets
+                        // - before/after relationship
+                        String parentTicket = objectMapper.treeToValue(currIssue.get("key"), String.class);
+                        JsonNode issuelinks = fields.get("issuelinks");
+                        Map<String, String> issuelinkResults = jiraIssuelinksCrTicketRelationshipoManip(issuelinks, parentTicket);
+                        // map key: "relatedCRTickets", "crRelationships"
+                        String relatedCRTickets = issuelinkResults.get("relatedCRTickets");
+
+                        // 1. Promotion
+                        String promotion = ppmNo + "_" + relatedCRTickets;  // e.g. U0237_PTF-84, PTF-90
+
+                        // 2. All Types
+                        String allTypes = TextSummary.typeMapToSetString(seqTypeMap);
+
+                        // - target hospitals
+                        String rawAffectedHosp = objectMapper.treeToValue(fields.get("customfield_11887"), String.class);
+
+                        // 3. Target Hospitals
+                        String targetHosp = regexModifyRawAffectedHospData(rawAffectedHosp);
+
+                        String crRelationships = issuelinkResults.get("crRelationships");
+                        if (!crRelationships.isBlank()){
+                            List<String> allRelationships = new ArrayList<>(Arrays.asList(crRelationships.split(", ")));
+                            CRInfo.compileFinalizedCrInfo(allRelationships, parentTicket);
+                        }
+                        // 4. Finalized CR info relationship
+                        String finalLinkedIssues = CRInfo.getLinkedIssues(parentTicket);
+
+                        textSummary.addReadmeItemUrgentService(new ReadmeItemUrgentService(promotion, allTypes, targetHosp, finalLinkedIssues, formNo));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Exception raised when fetching Jira Urgent/Service Promotions for Bi-weekly: " + e.getMessage() + "\n");
+        }
+    }
+
+    private static String extractPPMNo(String ITOCMS_PPM){
+        //e.g. ITOCMS-35975, PPM2024_U0237
+        // or ITOCMS-35975
+        if(ITOCMS_PPM.contains(",")){
+            String[] parts = ITOCMS_PPM.split(",");
+            for (String part: parts){
+                if(part.contains("PPM")){
+                    String[] ppmParts = part.split("_");
+                    return ppmParts[1];
+                    // e.g. PPM2024_U0237 -> U0237
+                }
+            }
+            return ITOCMS_PPM;
+        }else return ITOCMS_PPM;
+    }
+
 
     public static List<String> jFrogRespJsonManip(String formSummary, String jFrogResp){
         JsonNode jsonArray = null;
@@ -301,6 +391,89 @@ public class DataManip {
         }
     }
 
+    public static Map<String, String> jiraIssuelinksCrTicketRelationshipoManip(JsonNode issuelinks, String parentTicket){
+        Map<String, String> results = new HashMap<>(2);
+        final String RELATED_CR_TICKETS = "relatedCRTickets", CR_RELATIONSHIPS = "crRelationships";
+        results.put(RELATED_CR_TICKETS, "");    // excluding parent ticket since it is in field "key" which
+                                                // is out of the scope of issuelinks
+        results.put(CR_RELATIONSHIPS, "");
+        List<String> relatedCRTickets = new ArrayList<>(Arrays.asList(parentTicket));
+        List<String> crRelationships = new ArrayList<>();
+        try{
+            if (issuelinks != null && issuelinks.isArray()){
+                if (issuelinks.isEmpty()) return results;
+                else{
+                    for (JsonNode currIssueLink: issuelinks){
+                        String endingCrTicket = "", relationship = "";
+                        if (currIssueLink.has("outwardIssue")) {
+                            endingCrTicket = objectMapper.treeToValue(currIssueLink.get("outwardIssue").get("key"), String.class);
+                            relationship = objectMapper.treeToValue(currIssueLink.get("type").get("outward"), String.class);
+                        } else {
+                            endingCrTicket = objectMapper.treeToValue(currIssueLink.get("inwardIssue").get("key"), String.class);
+                            relationship = objectMapper.treeToValue(currIssueLink.get("type").get("inward"), String.class);
+                        }
+                        relationship = relationship.replaceAll("\\s+", " ");
+                        if (relationship.contains("has to")){
+                            // e.g. has to be done before -> done before
+                            String abridgedRelationship = relationship.replaceAll("has to be", "").strip();
+                            String fullRelationship = parentTicket + " " + abridgedRelationship + " " + endingCrTicket;
+                            crRelationships.add(fullRelationship);
+                        } else if (relationship.contains("Form of")){
+                            relatedCRTickets.add(endingCrTicket);
+                        }
+                    }
+                    String relatedCRTicketsString = String.join(", ", relatedCRTickets);
+                    String crRelationshipsString = String.join(", ", crRelationships);
+                    results.put(RELATED_CR_TICKETS, relatedCRTicketsString);
+                    results.put(CR_RELATIONSHIPS, crRelationshipsString);
+                }
+            }
+        }catch (Exception e){
+            System.out.println("Exception raised when fetching Jira CR linked issues: " + e.getMessage() + "\n");
+        }
+        return results;
+    }
+
+    public static List<String> jiraCrTicketLinkedIssuesRespManip(String response) {
+        List<String> allIssues = new ArrayList<>();
+        try {
+            JsonNode jsonArray = objectMapper.readTree(response);
+            JsonNode issues = jsonArray.get("issues");
+
+            if (issues != null && issues.isArray()){
+                for (JsonNode currIssue: issues){
+                    String beginningCrTicket = objectMapper.treeToValue(currIssue.get("key"), String.class);
+                    JsonNode allIssueLinks = currIssue.get("fields").get("issuelinks");
+                    if (allIssueLinks != null && allIssueLinks.isArray()){
+                        if (allIssueLinks.isEmpty()) return allIssues;
+                        else{
+                            for (JsonNode currIssueLink: allIssueLinks){
+                                String endingCrTicket = "", relationship = "";
+                                if (currIssueLink.has("outwardIssue")) {
+                                    endingCrTicket = objectMapper.treeToValue(currIssueLink.get("outwardIssue").get("key"), String.class);
+                                    relationship = objectMapper.treeToValue(currIssueLink.get("type").get("outward"), String.class);
+                                } else {
+                                    endingCrTicket = objectMapper.treeToValue(currIssueLink.get("inwardIssue").get("key"), String.class);
+                                    relationship = objectMapper.treeToValue(currIssueLink.get("type").get("inward"), String.class);
+                                }
+                                relationship = relationship.replaceAll("\\s+", " ");
+                                if (relationship.contains("has to")){
+                                    // e.g. has to be done before -> done before
+                                    String abridgedRelationship = relationship.replaceAll("has to be", "").strip();
+                                    String fullRelationship = beginningCrTicket + " " + abridgedRelationship + " " + endingCrTicket;
+                                    allIssues.add(fullRelationship);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Exception raised when fetching Jira CR linked issues: " + e.getMessage() + "\n");
+        }
+        return allIssues;
+    }
+
     private static int getTypeIndexFromJFrogPathParts(String[] pathParts){
         int pathSize = pathParts.length;
         for (int i = 0; i < pathSize; i++){
@@ -329,4 +502,6 @@ public class DataManip {
     public static String beautifyJsonString(String input){
         return input.replaceAll("[\",]", "").replaceAll("\\\\r", "");
     }
+
+
 }

@@ -9,10 +9,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @Setter
 @Getter
-public class ReadmeItem {
+public class ReadmeItemUrgentService {
     private String promotion;
     private String allTypes;
     private String targetHosp;
-    private String crInfo;
-    private String status;
+    private String linkedIssues;
+    private String k2FormNo;
 }

@@ -50,6 +50,19 @@ public class APIQueryService {
         DataManip.jiraRespJsonManip(response, true);
     }
 
+    public static void fetchJiraUrgentServiceForBiweeklyAPI() {
+        String response = webClient
+                .get()
+                .uri(singletonConfig.getFullJiraAPIUrgentServiceForBiweekly())
+                .headers(headers -> headers.setBasicAuth(username, password))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        DataManip.jiraUrgentServiceForBiweeklyRespManip(response);
+    }
+
     public static String fetchJiraAffectedHospAPI(String key){
         String targetAPI = singletonConfig.getJiraRestAPI() + String.format("cf[10508]~%s&fields=customfield_11887", key);
         String response = webClient
@@ -61,6 +74,19 @@ public class APIQueryService {
                 .bodyToMono(String.class)
                 .block();
         return DataManip.jiraAffectedHospRespManip(response);
+    }
+
+    public static List<String> fetchJiraCrTicketLinkedIssues(String crTicket){
+        String TARGET_API = singletonConfig.getJiraRestAPI() + String.format("key=%s&fields=issuelinks", crTicket);
+        String response = webClient
+                .get()
+                .uri(TARGET_API)
+                .headers(headers -> headers.setBasicAuth(username, password))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return DataManip.jiraCrTicketLinkedIssuesRespManip(response);
     }
 
     public static String fetchCrLinkedSummary(String endingCrTicket){

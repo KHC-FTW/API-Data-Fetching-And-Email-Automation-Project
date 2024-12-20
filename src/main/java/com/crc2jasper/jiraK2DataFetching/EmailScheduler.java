@@ -1,5 +1,6 @@
 package com.crc2jasper.jiraK2DataFetching;
 
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ public class EmailScheduler {
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
     private static final AllFormData allFormData = AllFormData.getInstance();
     private static final TextSummary textSummary = TextSummary.getInstance();
+    private static final CRInfo crInfo = CRInfo.getInstance();
 
 
 //    @Scheduled(cron = "*/10 * * * * *")
@@ -46,7 +48,7 @@ public class EmailScheduler {
     }
 
 //    @Deprecated
-//    @Scheduled(cron = "*/10 * * * * *")
+    @Scheduled(cron = "*/15 * * * * *")
     public static void simulateSendBiweeklyEmail(){
         if(EmailService.dailyCheckNewReleaseSimulation()){
             eventSequenceBiweekly();
@@ -56,19 +58,26 @@ public class EmailScheduler {
     }
 
     private static void eventSequenceBiweekly(){
-        // 1. Make sure we start anew
+        // Make sure we start anew
         allFormData.clearAllEmailFormData();
-        // 2. Start API call
+        // Start API call (biweekly normal promotion release)
         APIQueryService.fetchJiraBiweeklyAPI();
-        // 3. Generate Readme content and save it to a local temp location
+        // Start API call (urgent service for biweekly)
+        APIQueryService.fetchJiraUrgentServiceForBiweeklyAPI();
+        // Generate Readme content and save it to a local temp location
         TextSummary.writeReadMeTxt(textSummary.genReadMeContent());
-        // 4. Send email with Readme attached
+        // Generate URL files for K2 forms
+        UrlService.genUrlFile();
+        // Compress all files to a zip file
+        ZipService.compressFileToZip();
+        // Send email with zip attached
         EmailService.sendBiweeklyEmail();
-        // 5. Clear all saved data first to avoid unwanted data are left behind
+        // Clear all saved data first to avoid unwanted data are left behind
         allFormData.clearAllEmailFormData();
         textSummary.clearAllReadmeItems();
-        // 6. Delete the temporarily saved Readme file
-        TextSummary.deleteReadMeTxt();
+        crInfo.clearSummaryToLinkedIssues();
+        // Delete all temporary directories and all their files
+        DirectoryService.delDir();
     }
 
 }

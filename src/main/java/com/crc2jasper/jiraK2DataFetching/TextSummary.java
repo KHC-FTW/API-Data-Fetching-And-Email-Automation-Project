@@ -8,21 +8,36 @@ import java.util.*;
 public class TextSummary {
     private TextSummary(){}
     private static final TextSummary textSummary = new TextSummary();
-    private final List<ReadmeItem> allReadMeItems = new ArrayList<>();
-    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+    private final List<ReadmeItemPPM> allReadMeItemPPM = new ArrayList<>();
+    private final List<ReadmeItemUrgentService> allReadmeItemUrgentServices = new ArrayList<>();
+//    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+    private static final CRInfo crInfo = CRInfo.getInstance();
+
 
     public static TextSummary getInstance(){return textSummary;}
-    public void addReadmeItem(ReadmeItem readmeItem){
-        allReadMeItems.add(readmeItem);
+    public void addReadmeItemPPM(ReadmeItemPPM readmeItemPPM){
+        allReadMeItemPPM.add(readmeItemPPM);
     }
-    public List<ReadmeItem> getAllReadmeItems(){
-        return allReadMeItems;
+
+    public void addReadmeItemUrgentService(ReadmeItemUrgentService readmeItemUrgentService){
+        allReadmeItemUrgentServices.add(readmeItemUrgentService);
+    }
+    public List<ReadmeItemPPM> getAllReadmeItemPPM(){
+        return allReadMeItemPPM;
+    }
+    public List<ReadmeItemUrgentService> getAllReadmeItemUrgentServices(){
+        return allReadmeItemUrgentServices;
     }
 
     public int getLongestColWidth(){
         final int BUFFER = 20;
         int currLongest = 0;
-        for (ReadmeItem item: allReadMeItems){
+        for (ReadmeItemPPM item: allReadMeItemPPM){
+            if (item.getPromotion().length() > currLongest){
+                currLongest = item.getPromotion().length();
+            }
+        }
+        for(ReadmeItemUrgentService item: allReadmeItemUrgentServices){
             if (item.getPromotion().length() > currLongest){
                 currLongest = item.getPromotion().length();
             }
@@ -34,8 +49,8 @@ public class TextSummary {
         final int LONGEST_COL_WIDTH = getLongestColWidth();
         StringBuilder content = new StringBuilder(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "Promotion", "Remark"))
                 .append("-".repeat(LONGEST_COL_WIDTH * 3)).append("\n");
-        String year_batch = promotionRelease.getYear() + "-" + promotionRelease.getBatch();
-        for (ReadmeItem item: allReadMeItems){
+//        String year_batch = promotionRelease.getYear() + "-" + promotionRelease.getBatch();
+        for (ReadmeItemPPM item: allReadMeItemPPM){
             String status = item.getStatus();
             if(status.equalsIgnoreCase("Withdrawn")){
                 status = "[WITHDRAWN] ";
@@ -53,23 +68,47 @@ public class TextSummary {
                         }
                     }
                 }
-                if (!item.getCrInfo().isBlank()){
-                    String[] crParts = item.getCrInfo().split(";");
-                    for (String part: crParts){
-                        content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part.strip()));
+                String linkedIssues = item.getLinkedIssues();
+                if (!linkedIssues.isBlank()){
+                    content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", linkedIssues));
+                }
+//
+//                if (!item.getCrInfo().isBlank()){
+//                    String[] crParts = item.getCrInfo().split(";");
+//                    for (String part: crParts){
+//                        content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part.strip()));
+//                    }
+//                }
+            }
+            content.append("\n");
+        }
+        content.append("/").append("*".repeat(LONGEST_COL_WIDTH * 3)).append("/\n");
+        for (ReadmeItemUrgentService item: allReadmeItemUrgentServices){
+            String allTypes = item.getAllTypes();
+            content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", item.getPromotion(), allTypes));
+            if (!item.getTargetHosp().isBlank() && !item.getTargetHosp().equalsIgnoreCase("N/A")){
+                String[] parts = item.getTargetHosp().split("\n");
+                for(String part: parts){
+                    if (!part.isBlank()) {
+                        content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part));
                     }
                 }
             }
+            String linkedIssues = item.getLinkedIssues();
+            if (!linkedIssues.isBlank()){
+                content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", linkedIssues));
+            }
+            content.append("\n");
         }
-        return content.append("/").append("*".repeat(LONGEST_COL_WIDTH * 3)).append("/\n").toString();
+        return content.toString();
     }
 
     public void clearAllReadmeItems(){
-        allReadMeItems.clear();
+        allReadMeItemPPM.clear();
     }
 
     public static boolean writeReadMeTxt(String content){
-        Path path = Paths.get(SingletonConfig.getIniInputPath() + "\\Readme.txt");
+        Path path = Paths.get(DirectoryService.getTempSrcDirectory() + "\\Readme.txt");
         if(!Files.exists(path)){
             try {
                 Files.createFile(path);
@@ -87,6 +126,7 @@ public class TextSummary {
         return true;
     }
 
+    @Deprecated
     public static boolean deleteReadMeTxt(){
         Path path = Paths.get(SingletonConfig.getIniInputPath() + "\\Readme.txt");
         if(Files.exists(path)){
@@ -101,7 +141,7 @@ public class TextSummary {
         return false;
     }
 
-    public static Map<String, String> getAllCRTicketsFromDesc(String formSummary, String description) {
+    public static String getAllCRTicketsFromDesc(String formSummary, String description) {
         /*  Example:
 
             VTS-257: To provide customization of preset vital signs routine order for newly admitted patients at CMS e-Vitals Maintenance page.
@@ -122,27 +162,38 @@ public class TextSummary {
         List<String> crInfo = new ArrayList<>();
         final int TOTAL_RESULTS = 2;
         Map<String, String> allResults = new HashMap<>(TOTAL_RESULTS);
-        boolean hasCRInfo = false;
+//        boolean hasCRInfo = false;
         for (String line : lines) {
             int colonIndex = line.indexOf(":");
             if (colonIndex != -1) {
                 String crTicket = line.substring(0, colonIndex).trim();
                 crTickets.add(crTicket);
             }
-            if(!hasCRInfo && line.contains("=")){
+            /*if(!hasCRInfo && line.contains("=")){
                 hasCRInfo = true;
                 continue;
             }
-            if (hasCRInfo && !line.isBlank()) {crInfo.add(line);}
+            if (hasCRInfo && !line.isBlank()) {crInfo.add(line);}*/
         }
-        String crTicketString = String.join(", ", crTickets);
-        allResults.put("crTickets", crTicketString);
-        if (!crInfo.isEmpty()){
-            allResults.put("crInfo", CRInfo.compileAllCrInfo(crInfo));
-        }else{
-            allResults.put("crInfo", "");
+        /*
+        * TODO:
+        * May need to call jira api to fetch the issue details
+        * */
+
+        String parentCrTicket = crTickets.getFirst();
+        List<String> allParentLinkedIssues = APIQueryService.fetchJiraCrTicketLinkedIssues(parentCrTicket);
+        if(!allParentLinkedIssues.isEmpty()){
+            CRInfo.compileFinalizedCrInfo(allParentLinkedIssues, formSummary);
         }
-        return allResults;
+
+        return String.join(", ", crTickets);
+//        allResults.put("crTickets", crTicketString);
+//        if (!crInfo.isEmpty()){
+//            allResults.put("crInfo", CRInfo.compileFinalizedCrInfo(crInfo));
+//        }else{
+//            allResults.put("crInfo", "");
+//        }
+//        return allResults;
     }
 
     public static String typeMapToSetString(Map<Integer, String> types){

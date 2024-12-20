@@ -41,6 +41,7 @@ public class SingletonConfig {
         private String jiraAPI;
         private String jql_urgent_service;
         private String jql_biweekly_prn;
+        private String jql_biweekly_urgent_service;
         private String jiraFields;
         private String jfrogAPI;
 
@@ -49,6 +50,7 @@ public class SingletonConfig {
             return "\njiraAPI: " + jiraAPI
                     + "\njql_urgent_service: " + jql_urgent_service
                     + "\njql_biweekly_prn: " + jql_biweekly_prn
+                    + "\njql_biweekly_urgent_service: " + jql_biweekly_urgent_service
                     + "\njiraFields: " + jiraFields
                     + "\njfrogAPI: " + jfrogAPI;
         }
@@ -107,6 +109,12 @@ public class SingletonConfig {
         String year = promotionRelease.getYear();   //e.g. 2024
         String year_batch = year + "_" + promotionRelease.getBatch();   //e.g. 2024_13
         return apiConfig.jiraAPI + String.format(apiConfig.jql_biweekly_prn, year_batch, year) + apiConfig.jiraFields;
+    }
+    public String getFullJiraAPIUrgentServiceForBiweekly(){
+        String year = promotionRelease.getYear();
+        String year_batch = year + "-" + promotionRelease.getBatch();
+        String unresolvedPeriodBeginDate = TimeUtil.calculateDate(promotionRelease.getLastReleaseDate(), -7, "dd-MMM-yyyy", "yyyy-MM-dd");
+        return apiConfig.jiraAPI + String.format(apiConfig.jql_biweekly_urgent_service, year_batch, year_batch, year, unresolvedPeriodBeginDate) + apiConfig.jiraFields;
     }
     public String getJfrogAPI(){return apiConfig.jfrogAPI;}
 

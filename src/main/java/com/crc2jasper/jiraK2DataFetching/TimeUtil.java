@@ -27,4 +27,12 @@ public class TimeUtil {
         return LocalDate.parse(newDate, defaultDateFormatter).isAfter(LocalDate.parse(originalDate, defaultDateFormatter));
     }
 
+    public static String calculateDate(String inputDate, int day, String inputDateFormat, String outputDateFormat){
+        DateTimeFormatter inputDateFormatter = DateTimeFormatter.ofPattern(inputDateFormat, Locale.ENGLISH);
+        DateTimeFormatter outputDateFormatter = DateTimeFormatter.ofPattern(outputDateFormat, Locale.ENGLISH);
+        LocalDate date = LocalDate.parse(inputDate, inputDateFormatter);
+        LocalDate resultDate = date.plusDays(day);
+        return resultDate.format(outputDateFormatter);
+    }
+
 }
