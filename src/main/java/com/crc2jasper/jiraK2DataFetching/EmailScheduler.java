@@ -48,13 +48,18 @@ public class EmailScheduler {
     }
 
 //    @Deprecated
-    @Scheduled(cron = "*/15 * * * * *")
+//    @Scheduled(cron = "*/10 * * * * *")
     public static void simulateSendBiweeklyEmail(){
         if(EmailService.dailyCheckNewReleaseSimulation()){
             eventSequenceBiweekly();
             // Set the flag to resend the email tomorrow
             promotionRelease.setToResendTmr();
         }
+    }
+
+    public static void manualTestSendBiweeklyEmail(String lastReleaseDate, String year, String batch){
+        EmailService.manualTestBiweeklyRelease(lastReleaseDate, year, batch);
+        eventSequenceBiweekly();
     }
 
     private static void eventSequenceBiweekly(){

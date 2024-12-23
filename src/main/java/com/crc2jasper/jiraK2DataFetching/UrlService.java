@@ -8,6 +8,10 @@ public class UrlService {
     public static void genUrlFile(){
         String sourceDirectory = DirectoryService.getTempSrcDirectory();
         for (ReadmeItemPPM item: textSummary.getAllReadmeItemPPM()) {
+            String status = item.getStatus();
+            if(status.equalsIgnoreCase("Withdrawn") || status.equalsIgnoreCase("Rejected")){
+                continue;
+            }
             String allTypes = item.getAllTypes();
             if (allTypes.contains("imp-hosp") || allTypes.contains("imp-corp")) {
                 final String targetK2Url = String.format("https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form/?formNumber=%s&tab=PRD", item.getK2FormNo());

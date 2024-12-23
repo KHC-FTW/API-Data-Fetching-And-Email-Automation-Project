@@ -59,6 +59,10 @@ public class TextSummary {
             }else status = "";
             String allTypes = item.getAllTypes();
             content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", item.getPromotion(), status + allTypes));
+            if (status.equalsIgnoreCase("[WITHDRAWN] ") || status.equalsIgnoreCase("[REJECTED] ")){
+                content.append("\n");
+                continue;
+            }
             if (allTypes.contains("imp-hosp") || allTypes.contains("imp-corp")){
                 if (!item.getTargetHosp().isBlank() && !item.getTargetHosp().equalsIgnoreCase("N/A")){
                     String[] parts = item.getTargetHosp().split("\n");
@@ -105,6 +109,7 @@ public class TextSummary {
 
     public void clearAllReadmeItems(){
         allReadMeItemPPM.clear();
+        allReadmeItemUrgentServices.clear();
     }
 
     public static boolean writeReadMeTxt(String content){

@@ -197,12 +197,21 @@ public class EmailService {
         }
     }
 
+    public static void manualTestBiweeklyRelease(String lastReleaseDate, String year, String batch){
+        String subject = String.format("[Production]: CMS Normal Release for %s-%s - PRD", year, batch);
+        promotionRelease.setLastReleaseName(subject)
+                .setLastReleaseDate(lastReleaseDate)
+                .setYear(year)
+                .setBatch(batch)
+                .resetResendTmrStatus();
+    }
+
     @Deprecated
     public static boolean dailyCheckNewReleaseSimulation(){
         //simulate that this is the last release item saved in the system
         promotionRelease.setLastReleaseName("[Production]: CMS Normal Release for 2024-01 - PRD")
                 .setLastReleaseDate("01-Jan-2024")
-                .setYear("2020")
+                .setYear("2024")
                 .setBatch("01")
                 .resetResendTmrStatus();
 

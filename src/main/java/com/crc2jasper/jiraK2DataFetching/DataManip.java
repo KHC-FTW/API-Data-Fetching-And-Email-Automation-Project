@@ -28,7 +28,8 @@ public class DataManip {
 
     public static String getK2FormNo(String formLink){
         String[] parts = formLink.split("=");
-        return parts[1];
+        if (parts.length >= 2) return parts[1];
+        else return "N/A";
         //                                                                            v
         // e.g. https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber=M-ITOCMS-24-1179
         // -> [https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber, M-ITOCMS-24-1179]
@@ -175,7 +176,8 @@ public class DataManip {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage() + "\n");
+            System.out.println("Exception raised in jiraRespJsonManip():\n");
+            e.printStackTrace();
         }
     }
 
@@ -267,9 +269,14 @@ public class DataManip {
                         // Note: PPM may be empty, only ITOCMS appears in the field
                         String ppmNo = extractPPMNo(ITOCMS_PPM);
 
+
                         // - CR tickets
                         // - before/after relationship
                         String parentTicket = objectMapper.treeToValue(currIssue.get("key"), String.class);
+                        if(ppmNo.contains("ITOCMS")){
+                            String srcSummary = APIQueryService.fetchCrLinkedSummary(parentTicket);
+                            ppmNo = TextSummary.abridgedSummary(srcSummary);
+                        }
                         JsonNode issuelinks = fields.get("issuelinks");
                         Map<String, String> issuelinkResults = jiraIssuelinksCrTicketRelationshipoManip(issuelinks, parentTicket);
                         // map key: "relatedCRTickets", "crRelationships"

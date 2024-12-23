@@ -47,10 +47,10 @@ public class CRInfo {
         }
     }
 
-    private void addFinalizedLinkedIssues(String formSummary, String endingSummary, Map<String, Set<String>> endingCrTicketRelationshipMap){
+    private void addFinalizedLinkedIssues(String formSummary, Map<String, String> endingCrSummaryMap, Map<String, Set<String>> endingCrTicketRelationshipMap){
         List<String> fullRelationships = new ArrayList<>();
         for (String endingCr: endingCrTicketRelationshipMap.keySet()){
-            String relationshipString = String.join(" & ", endingCrTicketRelationshipMap.get(endingCr)) + " " + (endingSummary.isBlank() ? endingCr : endingCr + "_" + endingSummary);
+            String relationshipString = String.join(" & ", endingCrTicketRelationshipMap.get(endingCr)) + " " + (endingCrSummaryMap.get(endingCr).isBlank() ? endingCr : endingCr + "_" + endingCrSummaryMap.get(endingCr));
             fullRelationships.add(relationshipString);
         }
         // after extracting relevant info, must clear the list
@@ -72,6 +72,10 @@ public class CRInfo {
         * PTF-84 done after PTF-90
         * PTF-84 finished together with PTF-90
         * */
+
+        // need a map for endingCR: endingSummary
+        Map<String, String> endingCrSummaryMap = new HashMap<>();
+
         String endingCR = "";
         for (String info: allParentLinkedIssues){
             String[] parts = info.split("\\s+");
@@ -79,27 +83,15 @@ public class CRInfo {
             int len = parts.length; //e.g. 4
 //            String startingCR = parts[0];
             endingCR = parts[len - 1];
+            if(!endingCrSummaryMap.containsKey(endingCR)){
+                String endingSummary = APIQueryService.fetchCrLinkedSummary(endingCR);
+                endingCrSummaryMap.put(endingCR, endingSummary);
+            }
             String relationship = String.join(" ", Arrays.copyOfRange(parts, 1, len - 1));
             crInfo.addRelationship(endingCR, relationship);
         }
-        String endingSummary = APIQueryService.fetchCrLinkedSummary(endingCR);
-        crInfo.addFinalizedLinkedIssues(formSummary, endingSummary, crInfo.endingCrTicketRelationshipMap);
-
-
-//        List<String> concatenatedResults = new ArrayList<>();
-//        for (String key: crInfo.getAllBeginningCRs()){
-//            List<CRRelationship> crRelationships = crInfo.getCRRelationshipSet(key);
-//
-//            for (CRRelationship crRelationship: crRelationships){
-//                String summary = APIQueryService.fetchCrLinkedSummary(crRelationship.endingCR);
-//                String endingCrWithSummary = summary.isBlank() ? crRelationship.endingCR : crRelationship.endingCR + "_" + summary;
-//                String relationships = String.join(" & ", crRelationship.allRelationshipSet);
-//                String combined = relationships + " " + endingCrWithSummary;
-//                concatenatedResults.add(combined);
-//            }
-//        }
-//        crInfo.clearAllCRInfo();
-//        return String.join("; ", concatenatedResults);
+//        String endingSummary = APIQueryService.fetchCrLinkedSummary(endingCR);
+        crInfo.addFinalizedLinkedIssues(formSummary, endingCrSummaryMap, crInfo.endingCrTicketRelationshipMap);
     }
 
 }
