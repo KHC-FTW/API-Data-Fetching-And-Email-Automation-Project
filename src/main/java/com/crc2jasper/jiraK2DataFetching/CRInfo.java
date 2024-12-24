@@ -85,6 +85,9 @@ public class CRInfo {
             endingCR = parts[len - 1];
             if(!endingCrSummaryMap.containsKey(endingCR)){
                 String endingSummary = APIQueryService.fetchCrLinkedSummary(endingCR);
+                if(!endingSummary.contains("_")){
+                    endingSummary = "";
+                }
                 endingCrSummaryMap.put(endingCR, endingSummary);
             }
             String relationship = String.join(" ", Arrays.copyOfRange(parts, 1, len - 1));

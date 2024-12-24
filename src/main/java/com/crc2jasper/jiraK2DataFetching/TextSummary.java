@@ -206,8 +206,10 @@ public class TextSummary {
     }
 
     public static String abridgedSummary(String summary){
-        String[] parts = summary.split("_");
-        if(parts.length >= 2) return parts[1];
+        if(summary.contains("_")){
+            String[] parts = summary.split("_");
+            return parts[1];
+        }
         return "";
     }
 
