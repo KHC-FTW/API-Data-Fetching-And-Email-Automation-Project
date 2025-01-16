@@ -2,17 +2,17 @@ package com.crc2jasper.jiraK2DataFetching;
 
 public class PromotionRelease {
     private PromotionRelease(){}
-    private final String standardReleaseName = "[Production]: CMS Normal Release";
-    private final String releaseSender = "HA-CMS Non-Production Support Group";
+    private final String STANDARD_RELEASE_NAME = "[Production]: CMS Normal Release";
+    private final String RELEASE_SENDER = "HA-CMS Non-Production Support Group";
     private boolean resendTmr = false;
     private String lastReleaseName = "";
     private String lastReleaseDate = "";
     private String year = "";
     private String batch = "";
 
-    private static final PromotionRelease promotionRelease = new PromotionRelease();
+    private static final PromotionRelease PROMOTION_RELEASE = new PromotionRelease();
 
-    public static PromotionRelease getInstance(){return promotionRelease;}
+    public static PromotionRelease getInstance(){return PROMOTION_RELEASE;}
 
     public PromotionRelease setLastReleaseName(String lastReleaseName){
         this.lastReleaseName = lastReleaseName;
@@ -56,7 +56,7 @@ public class PromotionRelease {
     }
 
     public boolean isValidPromotionRelease(String subject, String sender){
-        return subject.contains(standardReleaseName) && sender.equalsIgnoreCase(releaseSender);
+        return subject.contains(STANDARD_RELEASE_NAME) && sender.equalsIgnoreCase(RELEASE_SENDER);
     }
 
     public boolean isDifferentRelease(String subject){

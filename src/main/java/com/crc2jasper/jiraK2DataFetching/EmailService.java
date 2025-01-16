@@ -3,6 +3,7 @@ package com.crc2jasper.jiraK2DataFetching;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Dispatch;
 
+import java.util.Map;
 import java.util.Set;
 
 public class EmailService {
@@ -13,10 +14,12 @@ public class EmailService {
     private static final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
     private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
 
+    private static final DataCenter dataCenter = DataCenter.getInstance();
+
+    @Deprecated
     public static void sendUrgentServiceEmail(){
-
+        final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
         Dispatch oOutlook = axOutlook.getObject();
-
         Dispatch mail = Dispatch
                 .invoke(oOutlook,
                         "CreateItem",
@@ -57,10 +60,10 @@ public class EmailService {
         Dispatch.call(mail, "Send");
     }
 
+    @Deprecated
     public static void sendBiweeklyEmail(){
-
+        final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
         Dispatch oOutlook = axOutlook.getObject();
-
         Dispatch mail = Dispatch
                 .invoke(oOutlook,
                         "CreateItem",
@@ -108,8 +111,8 @@ public class EmailService {
         Dispatch.call(mail, "Send");
     }
 
-    public static void findLastPromotionRelease(){
-
+    public static void findLastBiweeklyPromotionRelease(){
+        final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
         // Initialize Outlook application
         Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
 
@@ -120,7 +123,7 @@ public class EmailService {
         Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
 
         try{
-            Dispatch subfolder = Dispatch.call(folders, "Item", "_CMS Normal Release").toDispatch();
+            Dispatch subfolder = Dispatch.call(folders, "Item", singletonConfig.getCmsBiweeklyReleaseFolder()).toDispatch();
 
             // Get items from the subfolder
             Dispatch items = Dispatch.call(subfolder, "Items").toDispatch();
@@ -140,8 +143,9 @@ public class EmailService {
         }
     }
 
-    public static boolean dailyCheckForNewRelease(){
+    public static boolean checkDailyForNewBiweeklyRelease(){
         // Initialize Outlook application
+        ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
         Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
         // Get the default Inbox folder
         Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
@@ -149,7 +153,7 @@ public class EmailService {
         Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
 
         try{
-            Dispatch subfolder = Dispatch.call(folders, "Item", "_CMS Normal Release").toDispatch();
+            Dispatch subfolder = Dispatch.call(folders, "Item", singletonConfig.getCmsBiweeklyReleaseFolder()).toDispatch();
 
             // Get items from the subfolder
             Dispatch items = Dispatch.call(subfolder, "Items").toDispatch();
@@ -171,13 +175,13 @@ public class EmailService {
 
                 String[] subjectParts = subject.split(" ");
 
-                final int yearBatchIdx = 5;
+                final int YEAR_BATCH_IDX = 5;
                 // e.g. ["[Production]:", "CMS", "Normal", "Release", "for", "2024-13", "-", "PRD"]
                 // index:       0           1       2           3       4       5        6     7
 
                 // make sure we have the required part and won't cause nullPointerException
-                if (yearBatchIdx < subjectParts.length && subjectParts[yearBatchIdx].contains("-")){
-                    String[] yearBatchParts = subjectParts[yearBatchIdx].split("-");
+                if (YEAR_BATCH_IDX < subjectParts.length && subjectParts[YEAR_BATCH_IDX].contains("-")){
+                    String[] yearBatchParts = subjectParts[YEAR_BATCH_IDX].split("-");
                     String year = yearBatchParts[0];
                     String batch = yearBatchParts[1];
 
@@ -269,5 +273,61 @@ public class EmailService {
             System.out.println("The target email folder is either empty or has finished reading all the email items.");
             return false;
         }
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////
+    public static void sendUrgentServiceEmail_V2(){
+        Dispatch mail = Dispatch
+                .invoke(new ActiveXComponent("Outlook.Application"),
+                        "CreateItem",
+                        Dispatch.Get,
+                        new Object[]{"0"},
+                        new int[0])
+                .toDispatch();
+
+        Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectUrgentService());
+        Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
+
+        ////////////////////////////////////////////
+        Map<String, PromoForm> keyPromoFormMap = dataCenter.getKeyPromoFormMap();
+        String finalContent = EmailHTML.compileEmailHTMLContent(keyPromoFormMap, true);
+        Dispatch.put(mail, "HTMLBody", finalContent);
+        //////////////////////////////////////////
+
+        // Set reminder properties
+        Dispatch.put(mail, "ReminderSet", true);
+        Dispatch.call(mail, "Send");
+    }
+
+
+    public static void sendBiweeklyEmailWithAttachment_V2(){
+        Dispatch mail = Dispatch
+                .invoke(new ActiveXComponent("Outlook.Application"),
+                        "CreateItem",
+                        Dispatch.Get,
+                        new Object[]{"0"},
+                        new int[0])
+                .toDispatch();
+
+        Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectBiweekly());
+        Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
+
+        ////////////////////////////////////////////
+        Map<String, PromoForm> keyPromoFormMap = dataCenter.getKeyPromoFormMap();
+        String finalContent = EmailHTML.compileEmailHTMLContent(keyPromoFormMap, false);
+        Dispatch.put(mail, "HTMLBody", finalContent);
+        //////////////////////////////////////////
+
+        // Attach a document
+        Dispatch attachments = Dispatch.get(mail, "Attachments").toDispatch();
+        String zipFilePath = ZipService.getZipFilePath();
+        if (!zipFilePath.isBlank()){
+            Dispatch.call(attachments, "Add", zipFilePath);
+        }
+
+        // Set reminder properties
+        Dispatch.put(mail, "ReminderSet", true);
+        Dispatch.call(mail, "Send");
     }
 }

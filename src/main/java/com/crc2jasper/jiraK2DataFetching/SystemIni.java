@@ -49,7 +49,7 @@ public class SystemIni {
     }
 
     public static void setupPromotionReleaseConfig(){
-        EmailService.findLastPromotionRelease();
+        EmailService.findLastBiweeklyPromotionRelease();
         String lastReleaseName = promotionRelease.getLastReleaseName();
         String lastReleaseDate = promotionRelease.getLastReleaseDate();
         if (lastReleaseName.isEmpty() || lastReleaseDate.isEmpty()){

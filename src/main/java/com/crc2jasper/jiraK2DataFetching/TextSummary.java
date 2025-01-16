@@ -166,7 +166,7 @@ public class TextSummary {
         List<String> crTickets = new ArrayList<>();
         List<String> crInfo = new ArrayList<>();
         final int TOTAL_RESULTS = 2;
-        Map<String, String> allResults = new HashMap<>(TOTAL_RESULTS);
+//        Map<String, String> allResults = new HashMap<>(TOTAL_RESULTS);
 //        boolean hasCRInfo = false;
         for (String line : lines) {
             int colonIndex = line.indexOf(":");

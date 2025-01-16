@@ -1,6 +1,8 @@
 package com.crc2jasper.jiraK2DataFetching;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class EmailHTML {
 
@@ -145,7 +147,7 @@ public class EmailHTML {
     }
 
     private static String replaceWithHTMLbrTag(String input){
-        return input.replaceAll("(\r\n|\r|\n)", "<br>");
+        return input.isBlank() ? "N/A" : input.replaceAll("(\r\n|\r|\n)", "<br>");
     }
 
     private static String formatType(Map<Integer, String> emailFormTypes){
@@ -153,6 +155,12 @@ public class EmailHTML {
         for (String type: emailFormTypes.values()){
             results.append(type).append("<br>");
         }
+        return results.toString();
+    }
+
+    private static String formatType_v2(List<String> allTypes){
+        StringBuilder results = new StringBuilder();
+        allTypes.forEach(type -> results.append(type).append("<br>"));
         return results.toString();
     }
 
@@ -225,5 +233,75 @@ public class EmailHTML {
                 </body>
                 </html>
                 """, relatedCnt, related, unrelatedCnt, unrelated);
+    }
+
+
+    ////////////////////////////
+
+    public static String genTableRowContent_V2(PromoForm promoForm, boolean isUrgentService){
+        final String HIGHLIGHT_STYLE = " style=\"background-color: lightgreen; font-weight: bold;\"";
+        String addStyle = isUrgentService && TimeUtil.checkIsToday(promoForm.getTargetDate()) ? HIGHLIGHT_STYLE : "";
+        return isUrgentService ? String.format("""
+                <tr%s>
+                  	 <td>%s</td>
+                  	 <td>%s</td>
+                  	 <td><a href="https://hatool.home/jira/browse/%s" target="_blank">%s</a></td>
+                  	 <td>%s</td>
+                  	 <td><a href="%s" target="_blank">%s</td>
+                  	 <td>%s</td>
+                  	 <td>%s</td>
+                </tr>
+                """,
+                addStyle,
+                dateHighlight(TimeUtil.dateDayOfWeekFormatter(promoForm.getTargetDate())),
+                replaceWithHTMLbrTag(promoForm.getAffectedHosp()),
+                promoForm.getKey_ITOCMS(),
+                promoForm.getSummary(),
+                replaceWithHTMLbrTag(promoForm.getDescription()),
+                promoForm.getK2FormLink(),
+                promoForm.getK2FormNo(),
+                formatType_v2(promoForm.getTypes()),
+                promoForm.getStatus()
+                ) :
+                String.format("""
+                <tr>
+                  	 <td><a href="https://hatool.home/jira/browse/%s" target="_blank">%s</a></td>
+                  	 <td>%s</td>
+                  	 <td>%s</td>
+                  	 <td><a href="%s" target="_blank">%s</td>
+                  	 <td>%s</td>
+                  	 <td>%s</td>
+                """,
+                promoForm.getKey_ITOCMS(),
+                promoForm.getSummary(),
+                replaceWithHTMLbrTag(promoForm.getAffectedHosp()),
+                replaceWithHTMLbrTag(promoForm.getDescription()),
+                promoForm.getK2FormLink(),
+                promoForm.getK2FormNo(),
+                formatType_v2(promoForm.getTypes()),
+                promoForm.getStatus());
+    }
+
+    public static String compileEmailHTMLContent(final Map<String, PromoForm> keyPromoFormMap, final boolean isUrgentService){
+        StringBuilder relatedTableContent = new StringBuilder();
+        StringBuilder unrelatedTableContent = new StringBuilder();
+        final AtomicInteger relatedCnt = new AtomicInteger();
+        final AtomicInteger unrelatedCnt = new AtomicInteger();
+
+        keyPromoFormMap.values().forEach(promoForm -> {
+            if (promoForm.isImpHospOrImpCorp()){
+                relatedCnt.getAndIncrement();
+                relatedTableContent.append(genTableRowContent_V2(promoForm, isUrgentService));
+            }else{
+                unrelatedCnt.getAndIncrement();
+                unrelatedTableContent.append(genTableRowContent_V2(promoForm, isUrgentService));
+            }
+        });
+
+        return EmailHTML.dynamicEmailHTMLDom(
+                relatedCnt.get(),
+                relatedTableContent.toString(),
+                unrelatedCnt.get(), unrelatedTableContent.toString(),
+                isUrgentService);
     }
 }

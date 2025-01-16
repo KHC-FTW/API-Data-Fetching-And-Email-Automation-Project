@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
-
+/* This class to be obsoleted and replaced by JsonDataParser.java */
 public class DataManip {
     private DataManip(){}
     private static final ObjectMapper objectMapper = SystemIni.getObjectMapper();
@@ -77,7 +77,7 @@ public class DataManip {
                         targetDate = "";
                     }
                     // Jira Key e.g. ITOCMS-35743
-                    String formKey = objectMapper.treeToValue(currIssue.get("key"), String.class);
+                    String key_ITOCMS = objectMapper.treeToValue(currIssue.get("key"), String.class);
 
                     // TODO: Get target hospitals from CR ticket, extracted from description
                     // String relatedCRTicket = extractRelatedCRTicketFromDesc(formDescription);
@@ -86,7 +86,12 @@ public class DataManip {
 
                     // cf[10508]~%s&fields=customfield_11887 (%s is the jira key i.e. formKey)
 
-                    String affectedHosp = APIQueryService.fetchJiraAffectedHospAPI(formKey);
+                    String affectedHosp = APIQueryService.fetchJiraAffectedHospAPI(key_ITOCMS);
+                    //TODO: alternative:
+                    // here, the fetchJiraAffectedHospAPI() can be modified
+                    // to fetch even more results in one go, not just the affected hospitals
+                    // Explanation: since the parameter is the key, we can fetch other fields as well
+                    // e.g. issueLinks -> we can handle the relationships, but ignore the parent-child part for now
                     if (affectedHosp.isBlank()) affectedHosp = "N/A";
 
                     // Description e.g. GCRS-564: Update worklist type for DH-PHLC specimen type
@@ -106,12 +111,12 @@ public class DataManip {
                     String status = objectMapper.treeToValue(currIssue.get("fields").get("status").get("name"), String.class);
 
                     // Summary e.g. PPM2024_S0306, PPM2024_13002, PRN2024_RG0089
-                    String formSummary = objectMapper.treeToValue(currIssue.get("fields").get("summary"), String.class);
+                    String summary_PPM = objectMapper.treeToValue(currIssue.get("fields").get("summary"), String.class);
 
                     emailForm.targetDate(targetDate)
                             .affectedHosp(affectedHosp)
-                            .key(formKey)
-                            .summary(formSummary)
+                            .key(key_ITOCMS)
+                            .summary(summary_PPM)
                             .description(formDescription)
                             .promotionFormLink(formLink)
                             .promotionFormNo(formNo)
@@ -120,9 +125,9 @@ public class DataManip {
 
                     // Add to all form data first for getting later and assume it is related until we know its type
                     // Type info is done in the following part
-                    allformData.addRelatedEmailForm(formSummary, emailForm);
+                    allformData.addRelatedEmailForm(summary_PPM, emailForm);
 
-                    if (formSummary.contains("PRN")){      // PRN promotion: ad hoc type; 99.9% of the time it's unrelated to imp
+                    if (summary_PPM.contains("PRN")){      // PRN promotion: ad hoc type; 99.9% of the time it's unrelated to imp
                         // special case of PRN promotion
                         // 2 ways to check type:
                         // 1) By customfield_14500
@@ -144,32 +149,32 @@ public class DataManip {
                                         }
                                     }
                                 }
-                                processTypesFromPaths(allTypePaths, formSummary);
+                                processTypesFromPaths(allTypePaths, summary_PPM);
                             }
 
                         }else{
                             // cannot get PRN types from Jira, need to get from http://cdrasvn:90/
                             String relatedCRTicket = extractRelatedCRTicketFromDesc(formDescription);
                             List<String> allTypePaths = APIQueryService.collabNetInitialAPI(relatedCRTicket);
-                            processTypesFromPaths(allTypePaths, formSummary);
+                            processTypesFromPaths(allTypePaths, summary_PPM);
                         }
                     }else{
                         // Belong to PPM Type, will fetch from JFrog
-                        List<String> allTypePaths = APIQueryService.fetchJfrogAPI(formNo, formSummary);
-                        processTypesFromPaths(allTypePaths, formSummary);
+                        List<String> allTypePaths = APIQueryService.fetchJfrogAPI(formNo, summary_PPM);
+                        processTypesFromPaths(allTypePaths, summary_PPM);
 
                         if(genReadMe){  // only biweekly will gen readme file, urgent/service won't
 //                            Map<String, String> allCRResults =
-                            String crTickets = TextSummary.getAllCRTicketsFromDesc(formSummary, formDescription);
-                            String linkedIssues = CRInfo.getLinkedIssues(formSummary);
+                            String crTickets = TextSummary.getAllCRTicketsFromDesc(summary_PPM, formDescription);
+                            String linkedIssues = CRInfo.getLinkedIssues(summary_PPM);
 //                            String crInfo = allCRResults.get("crInfo");
-                            readmePromotion = TextSummary.abridgedSummary(formSummary) + "_" + crTickets;
+                            readmePromotion = TextSummary.abridgedSummary(summary_PPM) + "_" + crTickets;
                             readmeAllTypes = TextSummary.typeMapToSetString(emailForm.getTypes());
                             readmeTargetHosp = affectedHosp;
 //                            readmeCrInfo = crInfo;
                             readmeStatus = status;
 
-                            ReadmeItemPPM readmeItemPPM = new ReadmeItemPPM(formSummary, readmePromotion, readmeAllTypes, readmeTargetHosp, linkedIssues, formNo, readmeStatus);
+                            ReadmeItemPPM readmeItemPPM = new ReadmeItemPPM(summary_PPM, readmePromotion, readmeAllTypes, readmeTargetHosp, linkedIssues, formNo, readmeStatus);
                             textSummary.addReadmeItemPPM(readmeItemPPM);
                         }
                     }

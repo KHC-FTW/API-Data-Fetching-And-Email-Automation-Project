@@ -126,4 +126,5 @@ public class SingletonConfig {
     public String getCmsBiweeklyReleaseFolder(){return emailConfig.cms_biweekly_release_folder;}
     public String getEmailRecipients(){return emailConfig.recipients;}
 
+    public String getJiraFields(){return apiConfig.jiraFields;}
 }

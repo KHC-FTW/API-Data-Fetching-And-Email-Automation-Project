@@ -15,8 +15,10 @@ public class JiraK2DataFetchingApplication {
 		/*
 		* For quick test purposes
 		* */
-//		EmailScheduler.manualTestSendBiweeklyEmail("23-Dec-2024", "2024", "16");
-//		EmailScheduler.sendUrgentServiceEmail();
+
+//		EmailScheduler.manualTestSendBiweeklyEmail_V2_multiThreaded("03-Dec-2024", "2024", "15");
+//		EmailScheduler.manualTestSendBiweeklyEmail_V2("03-Dec-2024", "2024", "15");
+		EmailScheduler.sendUrgentServiceEmail_V2();
 //		EmailScheduler.simulateSendBiweeklyEmail();
 	}
 }
