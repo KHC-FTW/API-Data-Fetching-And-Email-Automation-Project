@@ -6,6 +6,7 @@ import com.crc2jasper.jiraK2DataFetching.util.TimeUtil;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Dispatch;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class EmailService {

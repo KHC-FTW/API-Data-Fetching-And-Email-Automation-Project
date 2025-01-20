@@ -2,6 +2,7 @@ package com.crc2jasper.jiraK2DataFetching.service;
 
 import com.crc2jasper.jiraK2DataFetching.component.DataCenter;
 import com.crc2jasper.jiraK2DataFetching.component.PromoForm;
+import com.crc2jasper.jiraK2DataFetching.config.SingletonConfig;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,11 +37,24 @@ public class ReadmeService {
                 String affectedHosp = promoForm.getAffectedHosp();
                 if (!affectedHosp.isBlank()){
                     String[] parts = affectedHosp.split("\n");
-                    for(String part: parts){
+                    int firstValidIndex = 0;
+                    for (int i = 0; i < parts.length; i++){
+                        if(!parts[i].isBlank()){
+                            firstValidIndex = i;
+                            break;
+                        }
+                    }
+                    if(isSpecialRemark(parts[firstValidIndex])){
+                        for (int i = firstValidIndex; i < parts.length; i++){
+                            if (!parts[i].isBlank())
+                                content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", parts[i]));
+                        }
+                    }
+                    /*for(String part: parts){
                         if (!part.isBlank()) {
                             content.append(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "", part));
                         }
-                    }
+                    }*/
                 }
                 String concatenatedRelationshipString = concatenateTicketRelationships(promoForm).getConcatenatedRelationshipString();
                 if(!concatenatedRelationshipString.isBlank()){
@@ -147,5 +161,7 @@ public class ReadmeService {
         return promoForm.concatenatedRelationshipString("");
     }
 
-
+    private static boolean isSpecialRemark(String statement){
+        return SingletonConfig.getInstance().getHospList().stream().anyMatch(statement::contains);
+    }
 }

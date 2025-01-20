@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 public class SingletonConfig {
@@ -77,12 +80,15 @@ public class SingletonConfig {
     private Admin admin = new Admin();
     private APIConfig apiConfig = new APIConfig();
     private EmailConfig emailConfig = new EmailConfig();
+    @Getter
+    private List<String> hospList = new ArrayList<>();
 
     @Override
     public String toString(){
         return "Admin: " + admin
                 + "\n\nAPIConfig: " + apiConfig
-                + "\n\nEmailConfig: " + emailConfig;
+                + "\n\nEmailConfig: " + emailConfig
+                + "\n\nHospList: " + hospList;
     }
 
     /*public static void setJsonFile(File jsonFile){SingletonConfig.jsonFile = jsonFile;}
@@ -127,4 +133,5 @@ public class SingletonConfig {
     public String getEmailRecipients(){return emailConfig.recipients;}
 
     public String getJiraFields(){return apiConfig.jiraFields;}
+
 }
