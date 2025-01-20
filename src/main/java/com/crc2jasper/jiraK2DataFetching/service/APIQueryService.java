@@ -1,132 +1,27 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.service;
 
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import com.crc2jasper.jiraK2DataFetching.obsoleted.DataManip;
+import com.crc2jasper.jiraK2DataFetching.util.JsonDataParser;
+import com.crc2jasper.jiraK2DataFetching.config.SingletonConfig;
+import com.crc2jasper.jiraK2DataFetching.config.WebClientConfig;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 public class APIQueryService {
-
     private APIQueryService(){}
-
     private static final WebClient CUSTOM_WEB_CLIENT = WebClientConfig.customWebClient();
     private static final String USERNAME = SingletonConfig.getInstance().getAdminUsername();
     private static final String PASSWORD = SingletonConfig.getInstance().getAdminPassword();
     private static final String JFROG_API = SingletonConfig.getInstance().getJfrogAPI();
-    private static final SingletonConfig SINGLETON_CONFIG = SingletonConfig.getInstance();
     private static final String BASIC_AUTH = Base64.getEncoder().encodeToString((USERNAME + ":" + PASSWORD).getBytes());
-
-    public static void fetchJiraUrgentServiceAPI() {
-        String response = CUSTOM_WEB_CLIENT
-                .get()
-                .uri(SINGLETON_CONFIG.getFullJiraAPIUrgentService())
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
-        DataManip.jiraRespJsonManip(response, false);
-    }
-
-    public static void fetchJiraBiweeklyAPI() {
-        String response = CUSTOM_WEB_CLIENT
-                .get()
-                .uri(SINGLETON_CONFIG.getFullJiraAPIBiweeklyPrn())
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
-        DataManip.jiraRespJsonManip(response, true);
-    }
-
-    public static void fetchJiraUrgentServiceForBiweeklyAPI() {
-        String response = CUSTOM_WEB_CLIENT
-                .get()
-                .uri(SINGLETON_CONFIG.getFullJiraAPIUrgentServiceForBiweekly())
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
-        DataManip.jiraUrgentServiceForBiweeklyRespManip(response);
-    }
-
-    public static String fetchJiraAffectedHospAPI(String key){
-        String targetAPI = SINGLETON_CONFIG.getJiraRestAPI() + String.format("cf[10508]~%s&fields=customfield_11887", key);
-        String response = CUSTOM_WEB_CLIENT
-                .get()
-                .uri(targetAPI)
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-        return DataManip.jiraAffectedHospRespManip(response);
-    }
-
-    public static List<String> fetchJiraCrTicketLinkedIssues(String crTicket){
-        String TARGET_API = SINGLETON_CONFIG.getJiraRestAPI() + String.format("key=%s&fields=issuelinks", crTicket);
-        String response = CUSTOM_WEB_CLIENT
-                .get()
-                .uri(TARGET_API)
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-        return DataManip.jiraCrTicketLinkedIssuesRespManip(response);
-    }
-
-    public static String fetchCrLinkedSummary(String endingCrTicket){
-        // cf[11599]~NDORS-705&fields=summary
-        String targetAPI = SINGLETON_CONFIG.getJiraRestAPI() + String.format("cf[11599]~%s&fields=summary", endingCrTicket);
-        String response = CUSTOM_WEB_CLIENT
-                .get()
-                .uri(targetAPI)
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-        return DataManip.jiraCRLinkedSummaryManip(response);
-    }
-
-    public static List<String> fetchJfrogAPI(String k2FormNo, String formSummary){
-        String json = String.format("""
-                      items.find(
-                        {
-                            "repo": {"$eq": "cms_cicd_package"},
-                            "path": {"$match": "*%s*"},
-                            "path": {"$match": "*DP_*"}
-                        }
-                      )
-                      """, k2FormNo);
-        // revised payload to include "path": {"$match": "*DP_*"} -> more specific json data can be returned
-
-        String response = CUSTOM_WEB_CLIENT
-                .post()
-                .uri(JFROG_API)
-                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
-                .header("Content-Type", "text/plain")
-                .bodyValue(json)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
-        return DataManip.jFrogRespJsonManip(formSummary, response);
-    }
 
     public static List<String> collabNetInitialAPI(String parentTicket){
         // appendingItem is the related Jira ticket no. e.g. PROMIS-46
@@ -167,13 +62,12 @@ public class APIQueryService {
         return targetPackagePaths;
     }
 
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static void fetchJiraUrgentServiceAPI_V2() {
         String response = CUSTOM_WEB_CLIENT
                 .get()
-                .uri(SINGLETON_CONFIG.getFullJiraAPIUrgentService())
+                .uri(SingletonConfig.getInstance().getFullJiraAPIUrgentService())
                 .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -185,7 +79,7 @@ public class APIQueryService {
     public static void fetchJiraBiweeklyAPI_V2() {
         String response = CUSTOM_WEB_CLIENT
                 .get()
-                .uri(SINGLETON_CONFIG.getFullJiraAPIBiweeklyPrn())
+                .uri(SingletonConfig.getInstance().getFullJiraAPIBiweeklyPrn())
                 .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -197,7 +91,7 @@ public class APIQueryService {
     public static void fetchJiraUrgentServiceForBiweeklyAPI_V2() {
         String response = CUSTOM_WEB_CLIENT
                 .get()
-                .uri(SINGLETON_CONFIG.getFullJiraAPIUrgentServiceForBiweekly())
+                .uri(SingletonConfig.getInstance().getFullJiraAPIUrgentServiceForBiweekly())
                 .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -207,7 +101,8 @@ public class APIQueryService {
     }
 
     public static void jiraTicketInfoFromITOCMSKey(String key_ITOCMS, boolean isBiweekly){
-        String targetAPI = SINGLETON_CONFIG.getJiraRestAPI() + String.format("cf[10508]~%s%s", key_ITOCMS, SINGLETON_CONFIG.getJiraFields());
+        SingletonConfig singletonConfig = SingletonConfig.getInstance();
+        String targetAPI = singletonConfig.getJiraRestAPI() + String.format("cf[10508]~%s%s", key_ITOCMS, singletonConfig.getJiraFields());
         String response = CUSTOM_WEB_CLIENT
                 .get()
                 .uri(targetAPI)
@@ -219,7 +114,7 @@ public class APIQueryService {
         JsonDataParser.parseJiraTicketInfoFromITOCMSKeyResp(response, key_ITOCMS, isBiweekly);
     }
 
-    public static String fetchJfrogAPIForTypes(String k2FormNo){
+    public static String fetchJFrogAPIForTypes(String k2FormNo){
         String json = String.format("""
                       items.find(
                         {
@@ -230,7 +125,6 @@ public class APIQueryService {
                       )
                       """, k2FormNo);
         // revised payload to include "path": {"$match": "*DP_*"} -> more specific json data can be returned
-
         return CUSTOM_WEB_CLIENT
                 .post()
                 .uri(JFROG_API)
@@ -247,7 +141,7 @@ public class APIQueryService {
 
     public static String fetchTicketSummary(String ticket){
         // cf[11599]~NDORS-705&fields=summary
-        String targetAPI = SINGLETON_CONFIG.getJiraRestAPI() + String.format("cf[11599]~%s&fields=summary", ticket);
+        String targetAPI = SingletonConfig.getInstance().getJiraRestAPI() + String.format("cf[11599]~%s&fields=summary", ticket);
         String response = CUSTOM_WEB_CLIENT
                 .get()
                 .uri(targetAPI)
@@ -261,7 +155,8 @@ public class APIQueryService {
 
     public static Map<String, String> fetchTicketSummaryAndRelatedTickets(String ticket){
         // cf[11599]~NDORS-705&fields=summary
-        String targetAPI = SINGLETON_CONFIG.getJiraRestAPI() + String.format("cf[11599]~%s%s", ticket, SINGLETON_CONFIG.getJiraFields());
+        SingletonConfig singletonConfig = SingletonConfig.getInstance();
+        String targetAPI = singletonConfig.getJiraRestAPI() + String.format("cf[11599]~%s%s", ticket, singletonConfig.getJiraFields());
         String response = CUSTOM_WEB_CLIENT
                 .get()
                 .uri(targetAPI)
@@ -276,7 +171,8 @@ public class APIQueryService {
 
     public static String fetchTicketIssueLinks(String tickets){
         // cf[11599]~NDORS-705&fields=summary
-        String targetAPI = SINGLETON_CONFIG.getJiraRestAPI() + String.format("key in (%s) order by key asc %s", tickets, SINGLETON_CONFIG.getJiraFields());
+        SingletonConfig singletonConfig = SingletonConfig.getInstance();
+        String targetAPI = singletonConfig.getJiraRestAPI() + String.format("key in (%s) order by key asc %s", tickets, singletonConfig.getJiraFields());
         return CUSTOM_WEB_CLIENT
                 .get()
                 .uri(targetAPI)
@@ -287,4 +183,108 @@ public class APIQueryService {
                 .block();
     }
 
+        /*public static void fetchJiraUrgentServiceAPI() {
+        String response = CUSTOM_WEB_CLIENT
+                .get()
+                .uri(SingletonConfig.getInstance().getFullJiraAPIUrgentService())
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        DataManip.jiraRespJsonManip(response, false);
+    }*/
+
+    /*public static void fetchJiraBiweeklyAPI() {
+        String response = CUSTOM_WEB_CLIENT
+                .get()
+                .uri(SingletonConfig.getInstance().getFullJiraAPIBiweeklyPrn())
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        DataManip.jiraRespJsonManip(response, true);
+    }*/
+
+    /*public static void fetchJiraUrgentServiceForBiweeklyAPI() {
+        String response = CUSTOM_WEB_CLIENT
+                .get()
+                .uri(SingletonConfig.getInstance().getFullJiraAPIUrgentServiceForBiweekly())
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        DataManip.jiraUrgentServiceForBiweeklyRespManip(response);
+    }*/
+
+    /*public static String fetchJiraAffectedHospAPI(String key){
+        String targetAPI = SingletonConfig.getInstance().getJiraRestAPI() + String.format("cf[10508]~%s&fields=customfield_11887", key);
+        String response = CUSTOM_WEB_CLIENT
+                .get()
+                .uri(targetAPI)
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return DataManip.jiraAffectedHospRespManip(response);
+    }*/
+
+    /*public static List<String> fetchJiraCrTicketLinkedIssues(String crTicket){
+        String TARGET_API = SingletonConfig.getInstance().getJiraRestAPI() + String.format("key=%s&fields=issuelinks", crTicket);
+        String response = CUSTOM_WEB_CLIENT
+                .get()
+                .uri(TARGET_API)
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return DataManip.jiraCrTicketLinkedIssuesRespManip(response);
+    }*/
+
+    /*public static String fetchCrLinkedSummary(String endingCrTicket){
+        // cf[11599]~NDORS-705&fields=summary
+        String targetAPI = SingletonConfig.getInstance().getJiraRestAPI() + String.format("cf[11599]~%s&fields=summary", endingCrTicket);
+        String response = CUSTOM_WEB_CLIENT
+                .get()
+                .uri(targetAPI)
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return DataManip.jiraCRLinkedSummaryManip(response);
+    }*/
+
+    /*public static List<String> fetchJfrogAPI(String k2FormNo, String formSummary){
+        String json = String.format("""
+                      items.find(
+                        {
+                            "repo": {"$eq": "cms_cicd_package"},
+                            "path": {"$match": "*%s*"},
+                            "path": {"$match": "*DP_*"}
+                        }
+                      )
+                      """, k2FormNo);
+        // revised payload to include "path": {"$match": "*DP_*"} -> more specific json data can be returned
+
+        String response = CUSTOM_WEB_CLIENT
+                .post()
+                .uri(JFROG_API)
+                .headers(headers -> headers.setBasicAuth(USERNAME, PASSWORD))
+                .header("Content-Type", "text/plain")
+                .bodyValue(json)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        return DataManip.jFrogRespJsonManip(formSummary, response);
+    }*/
 }

@@ -1,16 +1,12 @@
-package com.crc2jasper.jiraK2DataFetching;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+package com.crc2jasper.jiraK2DataFetching.obsoleted;
 
 public class TextSummary {
-    private TextSummary(){}
+    /* This class has been obsoleted. */
+    /*private TextSummary(){}
     private static final TextSummary textSummary = new TextSummary();
     private final List<ReadmeItemPPM> allReadMeItemPPM = new ArrayList<>();
     private final List<ReadmeItemUrgentService> allReadmeItemUrgentServices = new ArrayList<>();
-//    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+//    private static final PromoReleaseEmailConfig promotionRelease = PromoReleaseEmailConfig.getInstance();
     private static final CRInfo crInfo = CRInfo.getInstance();
 
 
@@ -147,7 +143,7 @@ public class TextSummary {
     }
 
     public static String getAllCRTicketsFromDesc(String formSummary, String description) {
-        /*  Example:
+        *//*  Example:
 
             VTS-257: To provide customization of preset vital signs routine order for newly admitted patients at CMS e-Vitals Maintenance page.
             EIO-14: Support edit e-I&O related frequency set up in CMS e-Vitals Maintenance page.
@@ -161,7 +157,7 @@ public class TextSummary {
             EIO-15 [clones] EIO-12
             VTS-264 [clones] VTS-250
             VTS-265 [clones] VTS-251
-        * */
+        * *//*
         String[] lines = description.split("\n");
         List<String> crTickets = new ArrayList<>();
         List<String> crInfo = new ArrayList<>();
@@ -174,16 +170,16 @@ public class TextSummary {
                 String crTicket = line.substring(0, colonIndex).trim();
                 crTickets.add(crTicket);
             }
-            /*if(!hasCRInfo && line.contains("=")){
+            *//*if(!hasCRInfo && line.contains("=")){
                 hasCRInfo = true;
                 continue;
             }
-            if (hasCRInfo && !line.isBlank()) {crInfo.add(line);}*/
+            if (hasCRInfo && !line.isBlank()) {crInfo.add(line);}*//*
         }
-        /*
+        *//*
         * TODO:
         * May need to call jira api to fetch the issue details
-        * */
+        * *//*
 
         String parentCrTicket = crTickets.getFirst();
         List<String> allParentLinkedIssues = APIQueryService.fetchJiraCrTicketLinkedIssues(parentCrTicket);
@@ -211,6 +207,6 @@ public class TextSummary {
             return parts[1];
         }
         return "";
-    }
+    }*/
 
 }

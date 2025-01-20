@@ -1,11 +1,8 @@
-package com.crc2jasper.jiraK2DataFetching;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+package com.crc2jasper.jiraK2DataFetching.obsoleted;
 
 public class AllFormData {
-
-    private AllFormData(){}
+    /* This class has been obsoleted. */
+    /*private AllFormData(){}
     private static final AllFormData allFormData = new AllFormData();
     private Map<String, EmailForm> relatedEmailForms = new LinkedHashMap<>();
     private Map<String, EmailForm> unrelatedEmailForms = new LinkedHashMap<>();
@@ -48,5 +45,5 @@ public class AllFormData {
     public void clearAllEmailFormData(){
         relatedEmailForms.clear();
         unrelatedEmailForms.clear();
-    }
+    }*/
 }

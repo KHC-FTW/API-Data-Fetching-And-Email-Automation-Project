@@ -1,16 +1,12 @@
-package com.crc2jasper.jiraK2DataFetching;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.*;
+package com.crc2jasper.jiraK2DataFetching.obsoleted;
 
 /* This class to be obsoleted and replaced by JsonDataParser.java */
 public class DataManip {
-    private DataManip(){}
-    private static final ObjectMapper objectMapper = SystemIni.getObjectMapper();
+    /* This class has been obsoleted. */
+    /*private DataManip(){}
+    private static final ObjectMapper objectMapper = AppIniService.getObjectMapper();
     private static final AllFormData allformData = AllFormData.getInstance();
-    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+    private static final PromoReleaseEmailConfig promotionRelease = PromoReleaseEmailConfig.getInstance();
     private static final TextSummary textSummary = TextSummary.getInstance();
     private static final String AFFECTED_HOSP_REGEX = "(Affected Hospital|Effective Date).|\\{color:.{0,8}}|\\{color}|\\\\u[0-9A-Fa-f]{4}\"|<[^>]*>|&[a-zA-Z0-9#]+;|[*{}]";
 //    private static final String AFFECTED_HOSP_REGEX = "\\*|Affected Hospital / Effective Date:|\\{color:.{0,8}}|\\{color\\}|\\\\u[0-9A-Fa-f]{4}\"|<[^>]*>|&[a-zA-Z0-9#]+;";
@@ -513,7 +509,7 @@ public class DataManip {
     @Deprecated
     public static String beautifyJsonString(String input){
         return input.replaceAll("[\",]", "").replaceAll("\\\\r", "");
-    }
+    }*/
 
 
 }

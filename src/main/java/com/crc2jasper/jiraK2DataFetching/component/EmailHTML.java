@@ -1,11 +1,13 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.component;
+
+import com.crc2jasper.jiraK2DataFetching.obsoleted.EmailForm;
+import com.crc2jasper.jiraK2DataFetching.util.TimeUtil;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class EmailHTML {
-
     private static final String EMAIL_HTML_HEADER = """
             <!DOCTYPE html>
             <html>
@@ -95,7 +97,7 @@ public class EmailHTML {
                 );
     }
 
-    public static String genTableRowContent(EmailForm emailForm, boolean isUrgentService){
+    /*public static String genTableRowContent(EmailForm emailForm, boolean isUrgentService){
         final String HIGHLIGHT_STYLE = " style=\"background-color: lightgreen; font-weight: bold;\"";
         String addStyle = emailForm.isToday() ? HIGHLIGHT_STYLE : "";
         return isUrgentService ? String.format("""
@@ -137,7 +139,7 @@ public class EmailHTML {
                 emailForm.getPromotionFormNo(),
                 formatType(emailForm.getTypes()),
                 emailForm.getStatus());
-    }
+    }*/
 
     private static String dateHighlight(String date){
         if (date.contains("Sat") || date.contains("Sun")){
@@ -150,13 +152,13 @@ public class EmailHTML {
         return input.isBlank() ? "N/A" : input.replaceAll("(\r\n|\r|\n)", "<br>");
     }
 
-    private static String formatType(Map<Integer, String> emailFormTypes){
+/*    private static String formatType(Map<Integer, String> emailFormTypes){
         StringBuilder results = new StringBuilder();
         for (String type: emailFormTypes.values()){
             results.append(type).append("<br>");
         }
         return results.toString();
-    }
+    }*/
 
     private static String formatType_v2(List<String> allTypes){
         StringBuilder results = new StringBuilder();
@@ -164,7 +166,7 @@ public class EmailHTML {
         return results.toString();
     }
 
-    @Deprecated
+    /*@Deprecated
     public static String emailHTMLDom(int relatedCnt, String related, int unrelatedCnt, String unrelated){
         return String.format("""
                 <!DOCTYPE html>
@@ -233,7 +235,7 @@ public class EmailHTML {
                 </body>
                 </html>
                 """, relatedCnt, related, unrelatedCnt, unrelated);
-    }
+    }*/
 
 
     ////////////////////////////

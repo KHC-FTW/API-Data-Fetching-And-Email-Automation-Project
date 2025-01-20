@@ -1,4 +1,4 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.util;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

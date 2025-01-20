@@ -1,4 +1,6 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.service;
+
+import com.crc2jasper.jiraK2DataFetching.component.PromoReleaseEmailConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,10 +10,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ZipService {
-    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+    private static final PromoReleaseEmailConfig PROMO_RELEASE_EMAIL_CONFIG = PromoReleaseEmailConfig.getInstance();
 
     public static String getZipFilePath(){
-        String zipFileName = promotionRelease.getYear() + "-" + promotionRelease.getBatch() + ".zip";
+        String zipFileName = PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" + PROMO_RELEASE_EMAIL_CONFIG.getBatch() + ".zip";
         String destDir = DirectoryService.getTempDestDirectory();
         String fullZipFilePath = destDir + "\\" + zipFileName;
         if (new File(fullZipFilePath).exists()){
@@ -22,7 +24,7 @@ public class ZipService {
     public static void compressFileToZip() {
         String srcDir = DirectoryService.getTempSrcDirectory();
         String destDir = DirectoryService.getTempDestDirectory();
-        String zipFileName = promotionRelease.getYear() + "-" + promotionRelease.getBatch() + ".zip";
+        String zipFileName = PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" + PROMO_RELEASE_EMAIL_CONFIG.getBatch() + ".zip";
         try {
             File srcFile = new File(srcDir);
 //            File destFile = new File(destDir);

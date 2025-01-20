@@ -1,9 +1,8 @@
-package com.crc2jasper.jiraK2DataFetching;
-
-import java.util.*;
+package com.crc2jasper.jiraK2DataFetching.obsoleted;
 
 public class CRInfo {
-                        // e.g. PTF-85
+    /* This class has been obsoleted. */
+    /*                    // e.g. PTF-85
     private final Map<String, Set<String>> endingCrTicketRelationshipMap = new LinkedHashMap<>();
     private final Map<String, String> allSummaryToLinkedIssuesMap = new HashMap<>();
     private static final CRInfo crInfo = new CRInfo();
@@ -68,10 +67,10 @@ public class CRInfo {
     }
 
     public static void compileFinalizedCrInfo(List<String> allParentLinkedIssues, String formSummary){
-        /* Raw CR Info Example:
+        *//* Raw CR Info Example:
         * PTF-84 done after PTF-90
         * PTF-84 finished together with PTF-90
-        * */
+        * *//*
 
         // need a map for endingCR: endingSummary
         Map<String, String> endingCrSummaryMap = new HashMap<>();
@@ -96,5 +95,5 @@ public class CRInfo {
 //        String endingSummary = APIQueryService.fetchCrLinkedSummary(endingCR);
         crInfo.addFinalizedLinkedIssues(formSummary, endingCrSummaryMap, crInfo.endingCrTicketRelationshipMap);
     }
-
+*/
 }

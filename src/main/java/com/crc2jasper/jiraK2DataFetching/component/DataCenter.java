@@ -1,4 +1,4 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.component;
 
 import lombok.Getter;
 
@@ -8,8 +8,8 @@ import java.util.Map;
 @Getter
 public class DataCenter {
     private DataCenter(){}
-    private Map<String, PromoForm> keyPromoFormMap = new LinkedHashMap<>();
-    private Map<String, PromoForm> keyUrgentServiceFormMap = new LinkedHashMap<>();
+    private final Map<String, PromoForm> keyPromoFormMap = new LinkedHashMap<>();
+    private final Map<String, PromoForm> keyUrgentServiceFormMap = new LinkedHashMap<>();
     private static final DataCenter dataCenter = new DataCenter();
     public static DataCenter getInstance(){return dataCenter;}
 

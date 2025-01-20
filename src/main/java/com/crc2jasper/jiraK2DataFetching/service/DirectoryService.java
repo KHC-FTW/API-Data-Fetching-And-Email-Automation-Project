@@ -1,24 +1,28 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.service;
+
+import com.crc2jasper.jiraK2DataFetching.component.PromoReleaseEmailConfig;
+import com.crc2jasper.jiraK2DataFetching.config.SingletonConfig;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+
 public class DirectoryService {
     private DirectoryService(){}
-    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
-    private static final String TEMP_SRC_DIRECTORY = SingletonConfig.getIniInputPath() + "\\" + promotionRelease.getYear() + "-" + promotionRelease.getBatch();
-    private static final String TEMP_DEST_DIRECTORY = SingletonConfig.getIniInputPath() + "\\tempDestDir";
+    private static final PromoReleaseEmailConfig PROMO_RELEASE_EMAIL_CONFIG = PromoReleaseEmailConfig.getInstance();
 
     public static String getTempSrcDirectory() {
-        createDir(TEMP_SRC_DIRECTORY);
-        return TEMP_SRC_DIRECTORY;
+        String tempSrcDirectory = SingletonConfig.getIniInputPath() + "\\" + PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" + PROMO_RELEASE_EMAIL_CONFIG.getBatch();
+        createDir(tempSrcDirectory);
+        return tempSrcDirectory;
     }
 
     public static String getTempDestDirectory() {
-        createDir(TEMP_DEST_DIRECTORY);
-        return TEMP_DEST_DIRECTORY;
+        String tempDestDirectory = SingletonConfig.getIniInputPath() + "\\tempDestDir";
+        createDir(tempDestDirectory);
+        return tempDestDirectory;
     }
 
     private static void createDir(String inputPath){
@@ -33,8 +37,10 @@ public class DirectoryService {
     }
 
     public static void delDir(){
-        File srcDir = new File(TEMP_SRC_DIRECTORY);
-        File targetDir = new File(TEMP_DEST_DIRECTORY);
+        String tempSrcDirectory = SingletonConfig.getIniInputPath() + "\\" + PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" + PROMO_RELEASE_EMAIL_CONFIG.getBatch();
+        String tempDestDirectory = SingletonConfig.getIniInputPath() + "\\tempDestDir";
+        File srcDir = new File(tempSrcDirectory);
+        File targetDir = new File(tempDestDirectory);
         deleteDirectory(srcDir);
         deleteDirectory(targetDir);
     }

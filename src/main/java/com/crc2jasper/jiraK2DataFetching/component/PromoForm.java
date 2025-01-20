@@ -1,4 +1,4 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.component;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

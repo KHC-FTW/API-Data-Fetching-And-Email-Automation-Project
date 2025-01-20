@@ -1,20 +1,8 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.obsoleted;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class EmailForm {
+    /* This class has been obsoleted. */
+/*
 //    private String ppmType;
 //    private String key;
     private String targetDate;
@@ -89,5 +77,6 @@ public class EmailForm {
                + "\nType(s): " + types
                + "\nStatus: " + status;
     }
+*/
 
 }

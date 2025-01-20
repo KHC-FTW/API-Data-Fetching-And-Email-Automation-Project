@@ -1,4 +1,7 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.service;
+
+import com.crc2jasper.jiraK2DataFetching.component.DataCenter;
+import com.crc2jasper.jiraK2DataFetching.component.PromoForm;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,69 +10,14 @@ import java.util.*;
 
 public class ReadmeService {
     private ReadmeService(){}
-    private static final DataCenter dataCenter = DataCenter.getInstance();
-
-    private static String abridgedSummary(String summary){
-        try{
-            return summary.split("_")[1];
-        }catch (Exception e){
-            return summary;
-        }
-    }
-
-    private static int getLongestColWidth(){
-        final int BUFFER = 20;
-        int currLongest = 0;
-
-        for (PromoForm promoForm: dataCenter.getKeyPromoFormMap().values()){
-            String summary = promoForm.getSummary();
-            if(summary.contains("PRN")) continue;
-            String concatenatedReadmePromoName = "";
-            if(summary.contains("_")){
-                concatenatedReadmePromoName = abridgedSummary(summary) + "_" + String.join(", ", promoForm.getAllTickets());
-                promoForm.concatenatedReadmePromoName(concatenatedReadmePromoName);
-            }else{
-                String key_ITOCMS = promoForm.getKey_ITOCMS();
-                concatenatedReadmePromoName = key_ITOCMS + "_" + String.join(", ", promoForm.getAllTickets());
-                promoForm.concatenatedReadmePromoName(concatenatedReadmePromoName);
-            }
-
-            if(concatenatedReadmePromoName.length() > currLongest){
-                currLongest = concatenatedReadmePromoName.length();
-            }
-        }
-        for (PromoForm promoForm: dataCenter.getKeyUrgentServiceFormMap().values()){
-            String concatenatedReadmePromoName = abridgedSummary(promoForm.getSummary()) + "_" + String.join(", ", promoForm.getAllTickets());
-            promoForm.concatenatedReadmePromoName(concatenatedReadmePromoName);
-            if(concatenatedReadmePromoName.length() > currLongest){
-                currLongest = concatenatedReadmePromoName.length();
-            }
-        }
-        return currLongest + BUFFER;
-    }
-
-    private static PromoForm concatenateTicketRelationships(PromoForm promoForm){
-        Map<String, Set<String>> endingTicketRelationship = promoForm.getEndingTicketRelationshipMap();
-        List<String> relationshipStringList = new ArrayList<>();
-        if(!endingTicketRelationship.isEmpty()){
-            Map<String, String> endingTicketSummary = promoForm.getEndingTicketSummaryMap();
-            for (Map.Entry<String, Set<String>> entry: endingTicketRelationship.entrySet()){
-                String endingSummary = endingTicketSummary.get(entry.getKey());
-                String endingTicket = entry.getKey() + (endingSummary.isBlank() ? "" : "_" + endingSummary);
-                String relationshipString = String.join(" and ", entry.getValue());
-                relationshipStringList.add(relationshipString + " " + endingTicket);
-            }
-            return promoForm.concatenatedRelationshipString(String.join("; ", relationshipStringList));
-        }
-        return promoForm.concatenatedRelationshipString("");
-    }
+    private static final DataCenter DATA_CENTER = DataCenter.getInstance();
 
     public static String genReadmeContent(){
         final int LONGEST_COL_WIDTH = getLongestColWidth();
         StringBuilder content = new StringBuilder(String.format("%-" + LONGEST_COL_WIDTH + "s%s%n", "Promotion", "Remark"))
                 .append("-".repeat(LONGEST_COL_WIDTH * 3)).append("\n");
 
-        for (PromoForm promoForm: dataCenter.getKeyPromoFormMap().values()){
+        for (PromoForm promoForm: DATA_CENTER.getKeyPromoFormMap().values()){
             if (promoForm.getSummary().contains("PRN")) continue;
             String status = promoForm.getStatus();
             if(status.equalsIgnoreCase("Withdrawn")){
@@ -102,7 +50,7 @@ public class ReadmeService {
             content.append("\n");
         }
         content.append("/").append("*".repeat(LONGEST_COL_WIDTH * 3)).append("/\n");
-        List<PromoForm> allUrgentServiceForms = new ArrayList<>(dataCenter.getKeyUrgentServiceFormMap().values());
+        List<PromoForm> allUrgentServiceForms = new ArrayList<>(DATA_CENTER.getKeyUrgentServiceFormMap().values());
         Collections.sort(allUrgentServiceForms);
         for (PromoForm promoForm: allUrgentServiceForms){
             String affectedHosp = promoForm.getAffectedHosp();
@@ -144,4 +92,60 @@ public class ReadmeService {
         }
         return true;
     }
+
+    private static String abridgedSummary(String summary){
+        try{
+            return summary.split("_")[1];
+        }catch (Exception e){
+            return summary;
+        }
+    }
+
+    private static int getLongestColWidth(){
+        final int BUFFER = 20;
+        int currLongest = 0;
+        for (PromoForm promoForm: DATA_CENTER.getKeyPromoFormMap().values()){
+            String summary = promoForm.getSummary();
+            if(summary.contains("PRN")) continue;
+            String concatenatedReadmePromoName = "";
+            if(summary.contains("_")){
+                concatenatedReadmePromoName = abridgedSummary(summary) + "_" + String.join(", ", promoForm.getAllTickets());
+                promoForm.concatenatedReadmePromoName(concatenatedReadmePromoName);
+            }else{
+                String key_ITOCMS = promoForm.getKey_ITOCMS();
+                concatenatedReadmePromoName = key_ITOCMS + "_" + String.join(", ", promoForm.getAllTickets());
+                promoForm.concatenatedReadmePromoName(concatenatedReadmePromoName);
+            }
+
+            if(concatenatedReadmePromoName.length() > currLongest){
+                currLongest = concatenatedReadmePromoName.length();
+            }
+        }
+        for (PromoForm promoForm: DATA_CENTER.getKeyUrgentServiceFormMap().values()){
+            String concatenatedReadmePromoName = abridgedSummary(promoForm.getSummary()) + "_" + String.join(", ", promoForm.getAllTickets());
+            promoForm.concatenatedReadmePromoName(concatenatedReadmePromoName);
+            if(concatenatedReadmePromoName.length() > currLongest){
+                currLongest = concatenatedReadmePromoName.length();
+            }
+        }
+        return currLongest + BUFFER;
+    }
+
+    private static PromoForm concatenateTicketRelationships(PromoForm promoForm){
+        Map<String, Set<String>> endingTicketRelationship = promoForm.getEndingTicketRelationshipMap();
+        List<String> relationshipStringList = new ArrayList<>();
+        if(!endingTicketRelationship.isEmpty()){
+            Map<String, String> endingTicketSummary = promoForm.getEndingTicketSummaryMap();
+            for (Map.Entry<String, Set<String>> entry: endingTicketRelationship.entrySet()){
+                String endingSummary = endingTicketSummary.get(entry.getKey());
+                String endingTicket = entry.getKey() + (endingSummary.isBlank() ? "" : "_" + endingSummary);
+                String relationshipString = String.join(" and ", entry.getValue());
+                relationshipStringList.add(relationshipString + " " + endingTicket);
+            }
+            return promoForm.concatenatedRelationshipString(String.join("; ", relationshipStringList));
+        }
+        return promoForm.concatenatedRelationshipString("");
+    }
+
+
 }

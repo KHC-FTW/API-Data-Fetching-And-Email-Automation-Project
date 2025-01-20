@@ -1,7 +1,7 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.component;
 
-public class PromotionRelease {
-    private PromotionRelease(){}
+public class PromoReleaseEmailConfig {
+    private PromoReleaseEmailConfig(){}
     private final String STANDARD_RELEASE_NAME = "[Production]: CMS Normal Release";
     private final String RELEASE_SENDER = "HA-CMS Non-Production Support Group";
     private boolean resendTmr = false;
@@ -10,18 +10,18 @@ public class PromotionRelease {
     private String year = "";
     private String batch = "";
 
-    private static final PromotionRelease PROMOTION_RELEASE = new PromotionRelease();
+    private static final PromoReleaseEmailConfig promoReleaseEmailConfig = new PromoReleaseEmailConfig();
 
-    public static PromotionRelease getInstance(){return PROMOTION_RELEASE;}
+    public static PromoReleaseEmailConfig getInstance(){return promoReleaseEmailConfig;}
 
-    public PromotionRelease setLastReleaseName(String lastReleaseName){
+    public PromoReleaseEmailConfig setLastReleaseName(String lastReleaseName){
         this.lastReleaseName = lastReleaseName;
         return this;
     }
 
     public String getLastReleaseName(){return this.lastReleaseName;}
 
-    public PromotionRelease setLastReleaseDate(String lastReleaseDate){
+    public PromoReleaseEmailConfig setLastReleaseDate(String lastReleaseDate){
         this.lastReleaseDate = lastReleaseDate;
         return this;
     }
@@ -29,14 +29,14 @@ public class PromotionRelease {
     public String getLastReleaseDate(){return this.lastReleaseDate;}
 
 
-    public PromotionRelease setYear(String year){
+    public PromoReleaseEmailConfig setYear(String year){
         this.year = year;
         return this;
     }
 
     public String getYear(){return this.year;}
 
-    public PromotionRelease setBatch(String batch){
+    public PromoReleaseEmailConfig setBatch(String batch){
         this.batch = batch;
         return this;
     }
@@ -45,12 +45,12 @@ public class PromotionRelease {
 
     public boolean getResendTmrStatus(){return resendTmr;}
 
-    public PromotionRelease resetResendTmrStatus(){
+    public PromoReleaseEmailConfig resetResendTmrStatus(){
         this.resendTmr = false;
         return this;
     }
 
-    public PromotionRelease setToResendTmr(){
+    public PromoReleaseEmailConfig setToResendTmr(){
         this.resendTmr = true;
         return this;
     }

@@ -1,11 +1,11 @@
-package com.crc2jasper.jiraK2DataFetching;
+package com.crc2jasper.jiraK2DataFetching.config;
 
+import com.crc2jasper.jiraK2DataFetching.component.PromoReleaseEmailConfig;
+import com.crc2jasper.jiraK2DataFetching.util.TimeUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.io.File;
 
 @Getter
 @Setter
@@ -14,9 +14,9 @@ public class SingletonConfig {
     private static SingletonConfig singletonAPIConfig = new SingletonConfig();
     @JsonIgnore
     private static String iniInputPath;
-    private static File jsonFile;
+//    private static File jsonFile;
     public static SingletonConfig getInstance(){return singletonAPIConfig;}
-    private static final PromotionRelease promotionRelease = PromotionRelease.getInstance();
+    private static final PromoReleaseEmailConfig PROMO_RELEASE_EMAIL_CONFIG = PromoReleaseEmailConfig.getInstance();
 
     @Getter
     @Setter
@@ -85,8 +85,8 @@ public class SingletonConfig {
                 + "\n\nEmailConfig: " + emailConfig;
     }
 
-    public static void setJsonFile(File jsonFile){SingletonConfig.jsonFile = jsonFile;}
-    public static File getJsonFile(){return SingletonConfig.jsonFile;}
+    /*public static void setJsonFile(File jsonFile){SingletonConfig.jsonFile = jsonFile;}
+    public static File getJsonFile(){return SingletonConfig.jsonFile;}*/
     public static void setIniInputPath(String path){SingletonConfig.iniInputPath = path;}
     public static String getIniInputPath(){return SingletonConfig.iniInputPath;}
 
@@ -106,21 +106,21 @@ public class SingletonConfig {
         // https://hatool.home/jira/rest/api/2/search?jql=
         // + project = ITOCMS AND summary ~ "PPM%s*" OR (summary ~ "PRN%s*" AND created >= -60d) AND "Promotion Schedule" is not EMPTY ORDER BY summary
         // &maxResults=1000&fields=customfield_11400&fields=summary&fields=description&fields=customfield_11628&fields=status&fields=customfield_10519&fields=customfield_14500&fields=customfield_11887
-        String year = promotionRelease.getYear();   //e.g. 2024
-        String year_batch = year + "_" + promotionRelease.getBatch();   //e.g. 2024_13
+        String year = PROMO_RELEASE_EMAIL_CONFIG.getYear();   //e.g. 2024
+        String year_batch = year + "_" + PROMO_RELEASE_EMAIL_CONFIG.getBatch();   //e.g. 2024_13
         return apiConfig.jiraAPI + String.format(apiConfig.jql_biweekly_prn, year_batch, year) + apiConfig.jiraFields;
     }
     public String getFullJiraAPIUrgentServiceForBiweekly(){
-        String year = promotionRelease.getYear();
-        String year_batch = year + "-" + promotionRelease.getBatch();
-        String unresolvedPeriodBeginDate = TimeUtil.calculateDate(promotionRelease.getLastReleaseDate(), -7, "dd-MMM-yyyy", "yyyy-MM-dd");
+        String year = PROMO_RELEASE_EMAIL_CONFIG.getYear();
+        String year_batch = year + "-" + PROMO_RELEASE_EMAIL_CONFIG.getBatch();
+        String unresolvedPeriodBeginDate = TimeUtil.calculateDate(PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseDate(), -7, "dd-MMM-yyyy", "yyyy-MM-dd");
         return apiConfig.jiraAPI + String.format(apiConfig.jql_biweekly_urgent_service, year_batch, year_batch, year, unresolvedPeriodBeginDate) + apiConfig.jiraFields;
     }
     public String getJfrogAPI(){return apiConfig.jfrogAPI;}
 
     public String getEmailSubjectUrgentService(){return emailConfig.subject_urgent_service;}
     public String getEmailSubjectBiweekly(){
-        String year_batch = promotionRelease.getYear() + "-" + promotionRelease.getBatch();
+        String year_batch = PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" + PROMO_RELEASE_EMAIL_CONFIG.getBatch();
         return String.format(emailConfig.subject_biweekly, year_batch);
     }
     public String getCmsBiweeklyReleaseFolder(){return emailConfig.cms_biweekly_release_folder;}
