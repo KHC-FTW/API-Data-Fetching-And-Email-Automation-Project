@@ -88,8 +88,18 @@ public class ReadmeService {
         return content.toString();
     }
 
+    public static int getFirstValidIndexFromAffectedHosp(String affectedHosp){
+        String[] parts = affectedHosp.split("\n");
+        for (int i = 0; i < parts.length; i++){
+            if(!parts[i].isBlank()){
+                return i;
+            }
+        }
+        return 0;
+    }
+
     public static boolean createReadmeFile(String content){
-        Path path = Paths.get(DirectoryService.getTempSrcDirectory() + "\\Readme.txt");
+        Path path = Paths.get(DirectoryService.getTempSrcDirectory() + "\\readme.txt");
         if(!Files.exists(path)){
             try {
                 Files.createFile(path);
@@ -161,7 +171,7 @@ public class ReadmeService {
         return promoForm.concatenatedRelationshipString("");
     }
 
-    private static boolean isSpecialRemark(String statement){
+    public static boolean isSpecialRemark(String statement){
         return SingletonConfig.getInstance().getHospList().stream().anyMatch(statement::contains);
     }
 }

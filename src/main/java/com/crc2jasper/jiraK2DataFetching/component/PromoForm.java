@@ -20,6 +20,7 @@ public class PromoForm implements Comparable<PromoForm> {
     private String k2FormLink = "";
     private String k2FormNo = "";
     private List<String> types = new ArrayList<>();
+    private List<String> impManualItems = new ArrayList<>();
     private boolean isImpHospOrImpCorp = false;
     private String status = "";
 
@@ -102,6 +103,16 @@ public class PromoForm implements Comparable<PromoForm> {
 
     public PromoForm isImpHospOrImpCorp(boolean isImpHospOrImpCorp){
         this.isImpHospOrImpCorp = isImpHospOrImpCorp;
+        return this;
+    }
+
+    public PromoForm addImpManualItems(String impManualItem){
+        this.impManualItems.add(impManualItem);
+        return this;
+    }
+
+    public PromoForm addImpManualItems(List<String> impManualItems){
+        this.impManualItems.addAll(impManualItems);
         return this;
     }
 

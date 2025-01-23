@@ -62,11 +62,13 @@ public class JsonDataParser {
                 String k2FormNo = retrieveK2FormNoFromLink(k2FormLink);
                 // Here, with the form no. e.g. M-ITOCMS-24-1244, we have to fetch JFrog for the types
                 String jFrogResp = APIQueryService.fetchJFrogAPIForTypes(k2FormNo);
-                List<String> allTypePaths = retrieveTypePathsFromJFrogResp(jFrogResp);
+                Map<String, List<String>> retrievedResults = retrieveTypePathsAndImpManualItemsFromJFrogResp(jFrogResp, true);
+                List<String> allTypePaths = retrievedResults.get("allTypePaths");
+                List<String> allImpManualItems = retrievedResults.get("allImpManualItems");
                 List<String> allTypes = retrieveFinalTypesFromTypePaths(allTypePaths);
                 if(isImpHospOrImpCorp(allTypes)){
                     PromoForm promoForm = new PromoForm().k2FormLink(k2FormLink)
-                            .k2FormNo(k2FormNo).types(allTypes);
+                            .k2FormNo(k2FormNo).types(allTypes).addImpManualItems(allImpManualItems);
                     String parentTicket = currIssue.get("key").asText();
                     Map<String, String> ticketSummaryAndRelatedTickets = APIQueryService.fetchTicketSummaryAndRelatedTickets(parentTicket);
                     String key_ITOCMS = ticketSummaryAndRelatedTickets.get("key_ITOCMS");
@@ -129,11 +131,15 @@ public class JsonDataParser {
                 }
                 APIQueryService.jiraTicketInfoFromITOCMSKey(key_ITOCMS, isBiweekly);
                 List<String> allTypePaths = null;
+                List<String> allImpManualItems = new ArrayList<>();
                 if(summary_PPM.contains("PPM")){
                     // fetch from jFrog
                     String k2FormNo = promoForm.getK2FormNo();
                     String jFrogResp = APIQueryService.fetchJFrogAPIForTypes(k2FormNo);
-                    allTypePaths = retrieveTypePathsFromJFrogResp(jFrogResp);
+//                    allTypePaths = retrieveTypePathsAndImpManualItemsFromJFrogResp(jFrogResp);
+                    Map<String, List<String>> retrievedResults = retrieveTypePathsAndImpManualItemsFromJFrogResp(jFrogResp, isBiweekly);
+                    allTypePaths = retrievedResults.get("allTypePaths");
+                    allImpManualItems = retrievedResults.get("allImpManualItems");
                 }else{
                     String rawK2FormLink = fields.get("customfield_11400").asText();
                     String k2FormLink = "", k2FormNo = "N/A";
@@ -153,7 +159,7 @@ public class JsonDataParser {
                     }
                 }
                 List<String> allTypes = retrieveFinalTypesFromTypePaths(allTypePaths);
-                promoForm.types(allTypes);
+                promoForm.types(allTypes).addImpManualItems(allImpManualItems);
                 promoForm.isImpHospOrImpCorp(isImpHospOrImpCorp(allTypes));
             }
         }catch (Exception e){
@@ -205,8 +211,10 @@ public class JsonDataParser {
         return allTypePaths;
     }
 
-    private static List<String> retrieveTypePathsFromJFrogResp(String jFrogResp){
+    private static Map<String, List<String>> retrieveTypePathsAndImpManualItemsFromJFrogResp(String jFrogResp, boolean isBiweekly){
         List<String> allTypePaths = new ArrayList<>();
+        List<String> allImpManualItems = new ArrayList<>();
+        Map<String, List<String>> extractedResults = new HashMap<>(2);
         try {
             JsonNode results = OBJECT_MAPPER.readTree(jFrogResp).get("results");
             for (JsonNode currResult: results){
@@ -216,12 +224,19 @@ public class JsonDataParser {
                 int keyIndex = getTypeIndexFromJFrogPathParts(pathParts);
                 if (keyIndex >= 0 && keyIndex < pathParts.length){ // && pathParts[keyIndex].contains("DP") -> not necessary due to revised API payload
                     allTypePaths.add(pathParts[keyIndex]);
+                    if(isBiweekly && pathParts[keyIndex].contains("imp-manual")){
+                        String impManualItem = currResult.get("name").asText();
+                        // e.g. "name": "752_OPMOE226_alter_tb_drug_intent_data_hdr.sql"
+                        allImpManualItems.add(impManualItem);
+                    }
                 }// else allTypePaths.add("N/A");  // actually, if the program is working fine, shouldn't have N/A at all
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return allTypePaths;
+        extractedResults.put("allTypePaths", allTypePaths);
+        extractedResults.put("allImpManualItems", allImpManualItems);
+        return extractedResults;
     }
 
     private static int getTypeIndexFromJFrogPathParts(String[] pathParts){

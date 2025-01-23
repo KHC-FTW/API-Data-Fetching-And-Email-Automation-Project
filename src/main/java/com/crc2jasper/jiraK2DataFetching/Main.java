@@ -18,9 +18,9 @@ public class Main {
 		* For quick test purposes
 		* */
 
-//		ScheduleService.manualTestSendBiweeklyEmail_V2_multiThreaded("20-Jan-2025", "2025", "01");
+//		ScheduleService.manualTestSendBiweeklyEmail_V2_multiThreaded("25-Sep-2024", "2024", "12");
 //		ScheduleService.manualTestSendBiweeklyEmail_V2("03-Dec-2024", "2024", "15");
 //		ScheduleService.sendUrgentServiceEmail_V2();
-//		ScheduleService.simulateSendBiweeklyEmail();
+		ScheduleService.simulateSendBiweeklyEmail();
 	}
 }

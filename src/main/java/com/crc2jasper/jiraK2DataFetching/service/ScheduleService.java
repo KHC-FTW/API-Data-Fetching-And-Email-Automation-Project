@@ -75,10 +75,16 @@ public class ScheduleService {
             e.printStackTrace();
         }
         Thread t3 = new Thread(() -> ReadmeService.createReadmeFile(ReadmeService.genReadmeContent()));
-        Thread t4 = new Thread(UrlService::genAllUrlFiles_V2);
-        t3.start(); t4.start();
+        Thread t4 = new Thread(()->{
+            String part1 = CompileSeqService.compilePart1Forwarder();
+            String part2 = CompileSeqService.compilePart2BackendScript();
+            String part3 = CompileSeqService.compilePart3UrgentServicePromotion();
+            CompileSeqService.createCompileSeqFile(CompileSeqService.genCompileSeqContent(part1, part2, part3));
+        });
+        Thread t5 = new Thread(UrlService::genAllUrlFiles_V2);
+        t3.start(); t4.start(); t5.start();
         try {
-            t3.join(); t4.join();
+            t3.join(); t4.join(); t5.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
