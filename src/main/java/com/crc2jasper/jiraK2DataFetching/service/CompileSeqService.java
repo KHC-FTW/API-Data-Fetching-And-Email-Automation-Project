@@ -118,7 +118,7 @@ public class CompileSeqService {
             String impManualScript = String.join("\n", promoForm.getImpManualItems());
             content.append(ppmAndTicket).append("\n").append(impManualScript).append("\n\n");
         });
-        return content.toString();
+        return content.isEmpty() ? "\n" : content.toString();
     }
 
     public static String compilePart3UrgentServicePromotion(){
@@ -147,6 +147,6 @@ public class CompileSeqService {
             String promoFormLink = promoForm.getK2FormLink() + "&tab=PRD";
             content.append(ppmAndTicket).append(specialAffectedHosp).append(ticketRelationships).append("\n").append(promoFormLink).append("\n\n");
         });
-        return content.toString();
+        return content.isEmpty() ? "\n" : content.toString();
     }
 }
