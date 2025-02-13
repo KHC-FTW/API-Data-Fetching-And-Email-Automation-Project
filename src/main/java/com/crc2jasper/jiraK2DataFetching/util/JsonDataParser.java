@@ -143,7 +143,7 @@ public class JsonDataParser {
                 }else{
                     String rawK2FormLink = fields.get("customfield_11400").asText();
                     String k2FormLink = "", k2FormNo = "N/A";
-                    if (!rawK2FormLink.equalsIgnoreCase("null")){
+                    if (rawK2FormLink.contains("M-ITOCMS")){
                         k2FormLink = retrieveK2FormLink(rawK2FormLink);
                         k2FormNo = retrieveK2FormNoFromLink(k2FormLink);
                     }
@@ -322,6 +322,7 @@ public class JsonDataParser {
         try{
             return k2FormLink.split("=")[1];
         }catch (Exception e){
+            System.out.println(k2FormLink);
             e.printStackTrace();
             return "N/A";
         }
