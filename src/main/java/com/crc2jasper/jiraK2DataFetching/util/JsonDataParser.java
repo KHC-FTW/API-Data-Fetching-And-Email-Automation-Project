@@ -124,11 +124,11 @@ public class JsonDataParser {
                 PromoForm promoForm = new PromoForm().targetDate(targetDate).key_ITOCMS(key_ITOCMS)
                         .summary(summary_PPM).description(description).status(status);
                 DATA_CENTER.addPromoForm(key_ITOCMS, promoForm);
-                if(isBiweekly){
-                    String allTicketString = fields.get("customfield_11599").asText();
-                    String[] allTickets = allTicketString.split(", ");
-                    promoForm.allTickets(new ArrayList<>(Arrays.asList(allTickets)));
-                }
+//                if(isBiweekly){
+                String allTicketString = fields.get("customfield_11599").asText();
+                String[] allTickets = allTicketString.split(", ");
+                promoForm.allTickets(new ArrayList<>(Arrays.asList(allTickets)));
+//                }
                 APIQueryService.jiraTicketInfoFromITOCMSKey(key_ITOCMS, isBiweekly);
                 List<String> allTypePaths = null;
                 List<String> allImpManualItems = new ArrayList<>();
