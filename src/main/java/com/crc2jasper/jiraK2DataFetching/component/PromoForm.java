@@ -120,4 +120,8 @@ public class PromoForm implements Comparable<PromoForm> {
     public int compareTo(PromoForm other) {
         return this.summary.compareTo(other.summary);
     }
+
+    public boolean isActivePromotion(){
+        return !(this.status.equalsIgnoreCase("Withdrawn") || this.status.equalsIgnoreCase("Rejected"));
+    }
 }

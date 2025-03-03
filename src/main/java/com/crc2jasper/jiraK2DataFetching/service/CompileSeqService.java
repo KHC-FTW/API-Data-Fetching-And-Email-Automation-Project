@@ -66,30 +66,32 @@ public class CompileSeqService {
 
     public static String compilePart1Forwarder(){
         StringBuilder content = new StringBuilder();
-        DATA_CENTER.getKeyPromoFormMap().values().stream().filter(PromoForm::isImpHospOrImpCorp).forEach(promoForm -> {
-            String ppmAndTicket = String.format(COMMENT_FORMAT, promoForm.getSummary() + "\t" + String.join(", ", promoForm.getAllTickets()));
-            String specialAffectedHosp = "";
-            String affectedHosp = promoForm.getAffectedHosp();
-            if (!affectedHosp.isBlank()){
-                String[] parts = affectedHosp.split("\n");
-                int firstValidIndex = 0;
-                for (int i = 0; i < parts.length; i++){
-                    if(!parts[i].isBlank()){
-                        firstValidIndex = i;
-                        break;
+        DATA_CENTER.getKeyPromoFormMap().values().stream()
+                .filter(promoForm -> promoForm.isImpHospOrImpCorp() && promoForm.isActivePromotion())
+                .forEach(promoForm -> {
+                    String ppmAndTicket = String.format(COMMENT_FORMAT, promoForm.getSummary() + "\t" + String.join(", ", promoForm.getAllTickets()));
+                    String specialAffectedHosp = "";
+                    String affectedHosp = promoForm.getAffectedHosp();
+                    if (!affectedHosp.isBlank()){
+                        String[] parts = affectedHosp.split("\n");
+                        int firstValidIndex = 0;
+                        for (int i = 0; i < parts.length; i++){
+                            if(!parts[i].isBlank()){
+                                firstValidIndex = i;
+                                break;
+                            }
+                        }
+                        if(ReadmeService.isSpecialRemark(parts[firstValidIndex])){
+                            for (int i = firstValidIndex; i < parts.length; i++){
+                                if (!parts[i].isBlank())
+                                    specialAffectedHosp += String.format(COMMENT_FORMAT, parts[i]);
+                            }
+                        }
                     }
-                }
-                if(ReadmeService.isSpecialRemark(parts[firstValidIndex])){
-                    for (int i = firstValidIndex; i < parts.length; i++){
-                        if (!parts[i].isBlank())
-                            specialAffectedHosp += String.format(COMMENT_FORMAT, parts[i]);
-                    }
-                }
-            }
-            String ticketRelationships = genCommentedRelationships(promoForm);
-            String promoFormLink = promoForm.getK2FormLink() + "&tab=PRD";
-            content.append(ppmAndTicket).append(specialAffectedHosp).append(ticketRelationships).append("\n").append(promoFormLink).append("\n\n");
-        });
+                    String ticketRelationships = genCommentedRelationships(promoForm);
+                    String promoFormLink = promoForm.getK2FormLink() + "&tab=PRD";
+                    content.append(ppmAndTicket).append(specialAffectedHosp).append(ticketRelationships).append("\n").append(promoFormLink).append("\n\n");
+                });
         return content.toString();
     }
 
