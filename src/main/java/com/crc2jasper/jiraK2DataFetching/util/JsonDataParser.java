@@ -116,11 +116,12 @@ public class JsonDataParser {
             for(JsonNode issue: issues){
                 JsonNode fields = issue.get("fields");
                 if(!isCurrentBatch(fields)) continue;
+                String status = fields.get("status").get("name").asText();
+                if(status.equalsIgnoreCase("Withdrawn") || status.equalsIgnoreCase("Rejected")) continue;
                 String key_ITOCMS = issue.get("key").asText();
                 String summary_PPM = fields.get("summary").asText();
                 String targetDate = fields.get("customfield_11628").asText();
                 String description = fields.get("description").asText();
-                String status = fields.get("status").get("name").asText();
                 PromoForm promoForm = new PromoForm().targetDate(targetDate).key_ITOCMS(key_ITOCMS)
                         .summary(summary_PPM).description(description).status(status);
                 DATA_CENTER.addPromoForm(key_ITOCMS, promoForm);
