@@ -56,53 +56,57 @@ public class JsonDataParser {
         try {
             JsonNode issues = OBJECT_MAPPER.readTree(jiraResp).get("issues");
             for (JsonNode currIssue: issues){
-                // "customfield_11400": "https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber=M-ITOCMS-24-1244"
-                JsonNode fields = currIssue.get("fields");
-                String k2FormLink = fields.get("customfield_11400").asText();
-                String k2FormNo = retrieveK2FormNoFromLink(k2FormLink);
-                // Here, with the form no. e.g. M-ITOCMS-24-1244, we have to fetch JFrog for the types
-                String jFrogResp = APIQueryService.fetchJFrogAPIForTypes(k2FormNo);
-                Map<String, List<String>> retrievedResults = retrieveTypePathsAndImpManualItemsFromJFrogResp(jFrogResp, true);
-                List<String> allTypePaths = retrievedResults.get("allTypePaths");
-                List<String> allImpManualItems = retrievedResults.get("allImpManualItems");
-                List<String> allTypes = retrieveFinalTypesFromTypePaths(allTypePaths);
-                if(isImpHospOrImpCorp(allTypes)){
-                    PromoForm promoForm = new PromoForm().k2FormLink(k2FormLink)
-                            .k2FormNo(k2FormNo).types(allTypes).addImpManualItems(allImpManualItems);
-                    String parentTicket = currIssue.get("key").asText();
-                    Map<String, String> ticketSummaryAndRelatedTickets = APIQueryService.fetchTicketSummaryAndRelatedTickets(parentTicket);
-                    String key_ITOCMS = ticketSummaryAndRelatedTickets.get("key_ITOCMS");
-                    String summary = ticketSummaryAndRelatedTickets.get("summary");
-                    String relatedTickets = ticketSummaryAndRelatedTickets.get("relatedTickets");
+                try{
+                    // "customfield_11400": "https://wfeng-svc/Runtime/Runtime/Form/CMS__Promotion__Form?formnumber=M-ITOCMS-24-1244"
+                    JsonNode fields = currIssue.get("fields");
+                    String k2FormLink = fields.get("customfield_11400").asText();
+                    String k2FormNo = retrieveK2FormNoFromLink(k2FormLink);
+                    // Here, with the form no. e.g. M-ITOCMS-24-1244, we have to fetch JFrog for the types
+                    String jFrogResp = APIQueryService.fetchJFrogAPIForTypes(k2FormNo);
+                    Map<String, List<String>> retrievedResults = retrieveTypePathsAndImpManualItemsFromJFrogResp(jFrogResp, true);
+                    List<String> allTypePaths = retrievedResults.get("allTypePaths");
+                    List<String> allImpManualItems = retrievedResults.get("allImpManualItems");
+                    List<String> allTypes = retrieveFinalTypesFromTypePaths(allTypePaths);
+                    if(isImpHospOrImpCorp(allTypes)){
+                        PromoForm promoForm = new PromoForm().k2FormLink(k2FormLink)
+                                .k2FormNo(k2FormNo).types(allTypes).addImpManualItems(allImpManualItems);
+                        String parentTicket = currIssue.get("key").asText();
+                        Map<String, String> ticketSummaryAndRelatedTickets = APIQueryService.fetchTicketSummaryAndRelatedTickets(parentTicket);
+                        String key_ITOCMS = ticketSummaryAndRelatedTickets.get("key_ITOCMS");
+                        String summary = ticketSummaryAndRelatedTickets.get("summary");
+                        String relatedTickets = ticketSummaryAndRelatedTickets.get("relatedTickets");
 
-                    promoForm.key_ITOCMS(key_ITOCMS).summary(summary)
-                            .allTickets(new ArrayList<>(Arrays.asList(relatedTickets.split(", "))));
+                        promoForm.key_ITOCMS(key_ITOCMS).summary(summary)
+                                .allTickets(new ArrayList<>(Arrays.asList(relatedTickets.split(", "))));
 
-                    Map<String, Set<String>> endingTicketRelationshipMap = processIssueLinks(fields.get("issuelinks"));
+                        Map<String, Set<String>> endingTicketRelationshipMap = processIssueLinks(fields.get("issuelinks"));
 
-                    // in relatedTickets, check to see if it's only parent ticket or there are child tickets too
-                    String[] allTickets = relatedTickets.split(", ");
-                    if (allTickets.length > 1){
-                        String[] childTickets = Arrays.copyOfRange(allTickets, 1, allTickets.length);
-                        String response = APIQueryService.fetchTicketIssueLinks(String.join(",", childTickets));
-                        JsonNode childTicketIssues = OBJECT_MAPPER.readTree(response).get("issues");
-                        for (JsonNode childTicketIssue: childTicketIssues){
-                            Map<String, Set<String>> childTicketRelationshipMap = processIssueLinks(childTicketIssue.get("fields").get("issuelinks"));
-                            endingTicketRelationshipMap.putAll(childTicketRelationshipMap);
+                        // in relatedTickets, check to see if it's only parent ticket or there are child tickets too
+                        String[] allTickets = relatedTickets.split(", ");
+                        if (allTickets.length > 1){
+                            String[] childTickets = Arrays.copyOfRange(allTickets, 1, allTickets.length);
+                            String response = APIQueryService.fetchTicketIssueLinks(String.join(",", childTickets));
+                            JsonNode childTicketIssues = OBJECT_MAPPER.readTree(response).get("issues");
+                            for (JsonNode childTicketIssue: childTicketIssues){
+                                Map<String, Set<String>> childTicketRelationshipMap = processIssueLinks(childTicketIssue.get("fields").get("issuelinks"));
+                                endingTicketRelationshipMap.putAll(childTicketRelationshipMap);
+                            }
                         }
-                    }
-                    promoForm.endingTicketRelationshipMap(endingTicketRelationshipMap);
+                        promoForm.endingTicketRelationshipMap(endingTicketRelationshipMap);
 
-                    Map<String, String> tempEndingTicketSummaryMap = new HashMap<>();
-                    for(String endingTicket: endingTicketRelationshipMap.keySet()){
-                        String endingTicketSummary = APIQueryService.fetchTicketSummary(endingTicket);;
-                        tempEndingTicketSummaryMap.put(endingTicket, endingTicketSummary);
-                    }
-                    promoForm.endingTicketSummaryMap(tempEndingTicketSummaryMap);
+                        Map<String, String> tempEndingTicketSummaryMap = new HashMap<>();
+                        for(String endingTicket: endingTicketRelationshipMap.keySet()){
+                            String endingTicketSummary = APIQueryService.fetchTicketSummary(endingTicket);;
+                            tempEndingTicketSummaryMap.put(endingTicket, endingTicketSummary);
+                        }
+                        promoForm.endingTicketSummaryMap(tempEndingTicketSummaryMap);
 
-                    String affectedHosp = retrieveAffectedHosp(fields);
-                    promoForm.affectedHosp(affectedHosp);
-                    DATA_CENTER.addUrgentServiceForm(key_ITOCMS, promoForm);
+                        String affectedHosp = retrieveAffectedHosp(fields);
+                        promoForm.affectedHosp(affectedHosp);
+                        DATA_CENTER.addUrgentServiceForm(key_ITOCMS, promoForm);
+                    }
+                }catch (Exception e){
+                    System.out.println("Exception raised when fetching Jira Urgent/Service Promotions for Bi-weekly: " + e.getMessage() + "\n");
                 }
             }
         } catch (Exception e) {

@@ -48,14 +48,15 @@ public class AppIniService {
     }
 
     public static void setupPromotionReleaseConfig(){
-        EmailService.findLastBiweeklyPromotionRelease();
-        String lastReleaseName = PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseName();
-        String lastReleaseDate = PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseDate();
-        if (lastReleaseName.isEmpty() || lastReleaseDate.isEmpty()){
-            System.out.println("Failed to collect last promotion release info from mail box.");
-            return;
+        if (EmailService.findLastBiweeklyPromotionRelease()){
+            String lastReleaseName = PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseName();
+            String lastReleaseDate = PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseDate();
+            System.out.printf("Successfully found and set up last promotion release: \"%s\" received on %s.\n", lastReleaseName, lastReleaseDate);
+        }else{
+            String lastReleaseName = PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseName();
+            String lastReleaseDate = PROMO_RELEASE_EMAIL_CONFIG.getLastReleaseDate();
+            System.out.printf("Failed to collect last promotion release info from mail box. Fall back to placeholder: \"%s\" received on %s.\n", lastReleaseName, lastReleaseDate);
         }
-        System.out.printf("Successfully found and set up last promotion release: \"%s\" received on %s.\n", lastReleaseName, lastReleaseDate);
     }
 
     /*@Deprecated

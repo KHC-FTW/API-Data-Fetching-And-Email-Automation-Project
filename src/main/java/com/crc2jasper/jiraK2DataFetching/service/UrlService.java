@@ -14,6 +14,7 @@ public class UrlService {
             if(promoForm.isImpHospOrImpCorp()){
                 String finalFileName = "";
                 String status = promoForm.getStatus();
+                if (promoForm.getK2FormLink().isBlank()) continue;
                 final String targetK2Url = promoForm.getK2FormLink() + "&tab=PRD";
                 if(status.equalsIgnoreCase("Withdrawn") || status.equalsIgnoreCase("Rejected")){
                     finalFileName += String.format("[%s] ", status);
@@ -23,7 +24,7 @@ public class UrlService {
                 if(!concatenatedRelationshipString.isBlank()){
                     finalFileName += String.format(" (%s)", concatenatedRelationshipString);
                 }
-                finalFileName += ".url";
+                finalFileName = filterFileName(finalFileName) + ".url";
                 try {
                     FileWriter writer = new FileWriter(sourceDirectory + "\\" + finalFileName);
                     writer.write("[InternetShortcut]\n");
@@ -45,7 +46,7 @@ public class UrlService {
             if(!concatenatedRelationshipString.isBlank()){
                 finalFileName += String.format(" (%s)", concatenatedRelationshipString);
             }
-            finalFileName += ".url";
+            finalFileName = filterFileName(finalFileName) + ".url";
             try {
                 FileWriter writer = new FileWriter(sourceDirectory + "\\" + finalFileName);
                 writer.write("[InternetShortcut]\n");
@@ -55,6 +56,10 @@ public class UrlService {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static String filterFileName(String fileName){
+        return fileName.replaceAll("[<>]", "");
     }
 
     public static void genAllUrlFiles_V2(){

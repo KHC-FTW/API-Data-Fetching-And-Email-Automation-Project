@@ -18,12 +18,12 @@ public class CompileSeqService {
     private static final String COMMENT_FORMAT = "/* %s */";
     private static final String CONTENT_STRUCTURE = """
             /* ========================================================================== */
-            /* Part 1: Forwarder %s Bi-weekly %sth */
+            /* Part 1: Forwarder Bi-weekly %s */
             /* ========================================================================== */
             
             %s
             /* ========================================================================== */
-            /* Part 2: Backend Script %s Bi-weekly %sth */
+            /* Part 2: Backend Script Bi-weekly %s */
             /* ========================================================================== */
             
             %s
@@ -40,9 +40,10 @@ public class CompileSeqService {
             """;
 
     public static String genCompileSeqContent(String part1, String part2, String part3){
-        return String.format(CONTENT_STRUCTURE, PROMO_RELEASE_EMAIL_CONFIG.getYear(), PROMO_RELEASE_EMAIL_CONFIG.getBatch(),
-                part1, PROMO_RELEASE_EMAIL_CONFIG.getYear(), PROMO_RELEASE_EMAIL_CONFIG.getBatch(),
-                part2, PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" +PROMO_RELEASE_EMAIL_CONFIG.getBatch(), part3);
+        final String YEAR_BATCH = PROMO_RELEASE_EMAIL_CONFIG.getYear() + "-" +PROMO_RELEASE_EMAIL_CONFIG.getBatch();
+        return String.format(CONTENT_STRUCTURE, YEAR_BATCH,
+                part1, YEAR_BATCH,
+                part2, YEAR_BATCH, part3);
     }
 
     public static boolean createCompileSeqFile(String content){
@@ -89,7 +90,7 @@ public class CompileSeqService {
                         }
                     }
                     String ticketRelationships = genCommentedRelationships(promoForm);
-                    String promoFormLink = promoForm.getK2FormLink() + "&tab=PRD";
+                    String promoFormLink = promoForm.getK2FormLink().isBlank() ? "" : promoForm.getK2FormLink() + "&tab=PRD";
                     content.append(ppmAndTicket).append(specialAffectedHosp).append(ticketRelationships).append("\n").append(promoFormLink).append("\n\n");
                 });
         return content.toString();
@@ -120,7 +121,7 @@ public class CompileSeqService {
             String impManualScript = String.join("\n", promoForm.getImpManualItems());
             content.append(ppmAndTicket).append("\n").append(impManualScript).append("\n\n");
         });
-        return content.isEmpty() ? "\n" : content.toString();
+        return content.isEmpty() ? "None\n\n" : content.toString();
     }
 
     public static String compilePart3UrgentServicePromotion(){
@@ -146,9 +147,9 @@ public class CompileSeqService {
                 }
             }
             String ticketRelationships = genCommentedRelationships(promoForm);
-            String promoFormLink = promoForm.getK2FormLink() + "&tab=PRD";
+            String promoFormLink = promoForm.getK2FormLink().isBlank() ? "" : promoForm.getK2FormLink() + "&tab=PRD";
             content.append(ppmAndTicket).append(specialAffectedHosp).append(ticketRelationships).append("\n").append(promoFormLink).append("\n\n");
         });
-        return content.isEmpty() ? "\n" : content.toString();
+        return content.isEmpty() ? "None\n\n" : content.toString();
     }
 }

@@ -6,6 +6,7 @@ import com.crc2jasper.jiraK2DataFetching.util.TimeUtil;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Dispatch;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -14,16 +15,16 @@ public class EmailService {
     private static final PromoReleaseEmailConfig PROMO_RELEASE_EMAIL_CONFIG = PromoReleaseEmailConfig.getInstance();
     private static final DataCenter DATA_CENTER = DataCenter.getInstance();
 
-    public static void findLastBiweeklyPromotionRelease(){
-        final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
-        // Initialize Outlook application
-        Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
-        // Get the default Inbox folder
-        Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
-
-        Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
-
+    public static boolean findLastBiweeklyPromotionRelease(){
         try{
+            final ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
+            // Initialize Outlook application
+            Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
+            // Get the default Inbox folder
+            Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
+
+            Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
+
             SingletonConfig singletonConfig = SingletonConfig.getInstance();
             Dispatch subfolder = Dispatch.call(folders, "Item", singletonConfig.getCmsBiweeklyReleaseFolder()).toDispatch();
             // Get items from the subfolder
@@ -36,20 +37,26 @@ public class EmailService {
 
             String receivedDate = TimeUtil.convertToDefaultDateFormat(Dispatch.get(item, "ReceivedTime").toString());
             PROMO_RELEASE_EMAIL_CONFIG.setLastReleaseName(subject).setLastReleaseDate(receivedDate).resetResendTmrStatus();
-        }catch(IllegalStateException e){
-            System.out.println("The target email folder is either empty or has finished reading all the email items.");
+            return true;
+        }catch(Exception e){
+//            System.out.println("The target email folder is either empty, does not exist or fails to find the target email item.");
+            String placeholderSubject = "[Production]: CMS Normal Release for 2000-01 - PRD";
+            String placeholderDate = "01-Jan-2000";
+            PROMO_RELEASE_EMAIL_CONFIG.setLastReleaseName(placeholderSubject).setLastReleaseDate(placeholderDate).resetResendTmrStatus();
+            return false;
         }
     }
 
     public static boolean checkDailyForNewBiweeklyRelease(){
-        // Initialize Outlook application
-        ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
-        Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
-        // Get the default Inbox folder
-        Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
-        // Get the subfolder named "Test1"
-        Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
         try{
+            // Initialize Outlook application
+            ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
+            Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
+            // Get the default Inbox folder
+            Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
+            // Get the subfolder named "Test1"
+            Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
+
             SingletonConfig singletonConfig = SingletonConfig.getInstance();
             Dispatch subfolder = Dispatch.call(folders, "Item", singletonConfig.getCmsBiweeklyReleaseFolder()).toDispatch();
             // Get items from the subfolder
@@ -83,8 +90,9 @@ public class EmailService {
                 }
             }
             return false;
-        }catch(IllegalStateException e){
-            System.out.println("The target email folder is either empty or has finished reading all the email items.");
+        }catch(Exception e){
+            System.out.printf("Error encountered with Outlook and/or the target email folder \"%s\".\n", SingletonConfig.getInstance().getCmsBiweeklyReleaseFolder());
+            System.out.println("Please ensure they have been set up correctly.");
             return false;
         }
     }
@@ -106,23 +114,24 @@ public class EmailService {
     }
 
     public static boolean checkdailyForNewBiweeklyReleaseSimulation(){
-        //simulate that this is the last release item saved in the system
-        PROMO_RELEASE_EMAIL_CONFIG.setLastReleaseName("[Production]: CMS Normal Release for 2024-01 - PRD")
-                .setLastReleaseDate("01-Jan-2024")
-                .setYear("2024")
-                .setBatch("01")
-                .resetResendTmrStatus();
-
-        // Initialize Outlook application
-        ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
-        Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
-        // Get the default Inbox folder
-        Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
-        // Get the subfolder named "Test1"
-        Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
-
         try{
-            Dispatch subfolder = Dispatch.call(folders, "Item", "_CMS Normal Release").toDispatch();
+            //simulate that this is the last release item saved in the system
+//            PROMO_RELEASE_EMAIL_CONFIG.setLastReleaseName("[Production]: CMS Normal Release for 2024-01 - PRD")
+//                    .setLastReleaseDate("01-Jan-2024")
+//                    .setYear("2024")
+//                    .setBatch("01")
+//                    .resetResendTmrStatus();
+
+            // Initialize Outlook application
+            ActiveXComponent axOutlook = new ActiveXComponent("Outlook.Application");
+            Dispatch namespace = axOutlook.getProperty("Session").toDispatch();
+            // Get the default Inbox folder
+            Dispatch inbox = Dispatch.call(namespace, "GetDefaultFolder", 6).toDispatch(); // 6 is the constant for the Inbox folder
+            // Get the subfolder named "Test1"
+            Dispatch folders = Dispatch.call(inbox, "Folders").toDispatch();
+
+            SingletonConfig singletonConfig = SingletonConfig.getInstance();
+            Dispatch subfolder = Dispatch.call(folders, "Item", singletonConfig.getCmsBiweeklyReleaseFolder()).toDispatch();
 
             // Get items from the subfolder
             Dispatch items = Dispatch.call(subfolder, "Items").toDispatch();
@@ -163,66 +172,75 @@ public class EmailService {
                 }
             }
             return false;
-        }catch(IllegalStateException e){
-            System.out.println("The target email folder is either empty or has finished reading all the email items.");
+        }catch(Exception e){
+            System.out.printf("Error encountered with Outlook and/or the target email folder \"%s\".\n", SingletonConfig.getInstance().getCmsBiweeklyReleaseFolder());
+            System.out.println("Please ensure they have been set up correctly.");
             return false;
         }
     }
 
     //////////////////////////////////////////////////////////////////////////////////
     public static void sendUrgentServiceEmail_V2(){
-        Dispatch mail = Dispatch
-                .invoke(new ActiveXComponent("Outlook.Application"),
-                        "CreateItem",
-                        Dispatch.Get,
-                        new Object[]{"0"},
-                        new int[0])
-                .toDispatch();
+        try{
+            Dispatch mail = Dispatch
+                    .invoke(new ActiveXComponent("Outlook.Application"),
+                            "CreateItem",
+                            Dispatch.Get,
+                            new Object[]{"0"},
+                            new int[0])
+                    .toDispatch();
 
-        SingletonConfig singletonConfig = SingletonConfig.getInstance();
-        Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectUrgentService());
-        Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
+            SingletonConfig singletonConfig = SingletonConfig.getInstance();
+            Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectUrgentService());
+            Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
 
-        ////////////////////////////////////////////
-        Map<String, PromoForm> keyPromoFormMap = DATA_CENTER.getKeyPromoFormMap();
-        String finalContent = EmailHTML.compileEmailHTMLContent(keyPromoFormMap, true);
-        Dispatch.put(mail, "HTMLBody", finalContent);
-        //////////////////////////////////////////
+            ////////////////////////////////////////////
+            Map<String, PromoForm> keyPromoFormMap = DATA_CENTER.getKeyPromoFormMap();
+            String finalContent = EmailHTML.compileEmailHTMLContent(keyPromoFormMap, true);
+            Dispatch.put(mail, "HTMLBody", finalContent);
+            //////////////////////////////////////////
 
-        // Set reminder properties
-        Dispatch.put(mail, "ReminderSet", true);
-        Dispatch.call(mail, "Send");
+            // Set reminder properties
+            Dispatch.put(mail, "ReminderSet", true);
+            Dispatch.call(mail, "Send");
+        }catch (Exception e){
+            System.out.println("Failed to send urgent/service email. Possible error with Outlook.");
+        }
     }
 
     public static void sendBiweeklyEmailWithAttachment_V2(){
-        Dispatch mail = Dispatch
-                .invoke(new ActiveXComponent("Outlook.Application"),
-                        "CreateItem",
-                        Dispatch.Get,
-                        new Object[]{"0"},
-                        new int[0])
-                .toDispatch();
+        try{
+            Dispatch mail = Dispatch
+                    .invoke(new ActiveXComponent("Outlook.Application"),
+                            "CreateItem",
+                            Dispatch.Get,
+                            new Object[]{"0"},
+                            new int[0])
+                    .toDispatch();
 
-        SingletonConfig singletonConfig = SingletonConfig.getInstance();
-        Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectBiweekly());
-        Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
+            SingletonConfig singletonConfig = SingletonConfig.getInstance();
+            Dispatch.put(mail, "Subject", singletonConfig.getEmailSubjectBiweekly());
+            Dispatch.put(mail, "To", singletonConfig.getEmailRecipients());
 
-        ////////////////////////////////////////////
-        Map<String, PromoForm> keyPromoFormMap = DATA_CENTER.getKeyPromoFormMap();
-        String finalContent = EmailHTML.compileEmailHTMLContent(keyPromoFormMap, false);
-        Dispatch.put(mail, "HTMLBody", finalContent);
-        //////////////////////////////////////////
+            ////////////////////////////////////////////
+            Map<String, PromoForm> keyPromoFormMap = DATA_CENTER.getKeyPromoFormMap();
+            String finalContent = EmailHTML.compileEmailHTMLContent(keyPromoFormMap, false);
+            Dispatch.put(mail, "HTMLBody", finalContent);
+            //////////////////////////////////////////
 
-        // Attach a document
-        Dispatch attachments = Dispatch.get(mail, "Attachments").toDispatch();
-        String zipFilePath = ZipService.getZipFilePath();
-        if (!zipFilePath.isBlank()){
-            Dispatch.call(attachments, "Add", zipFilePath);
+            // Attach a document
+            Dispatch attachments = Dispatch.get(mail, "Attachments").toDispatch();
+            String zipFilePath = ZipService.getZipFilePath();
+            if (!zipFilePath.isBlank()){
+                Dispatch.call(attachments, "Add", zipFilePath);
+            }
+
+            // Set reminder properties
+            Dispatch.put(mail, "ReminderSet", true);
+            Dispatch.call(mail, "Send");
+        }catch (Exception e){
+            System.out.println("Failed to send biweekly email. Possible error with Outlook.");
         }
-
-        // Set reminder properties
-        Dispatch.put(mail, "ReminderSet", true);
-        Dispatch.call(mail, "Send");
     }
 
       /*@Deprecated
