@@ -1,0 +1,43 @@
+{
+    "admin" : {
+        "username" : "",
+
+        "password" : "",
+
+        "email" : ""
+    },
+
+    "apiConfig" : {
+        "jiraAPI" : "https://hatool.home/jira/rest/api/2/search?jql=",
+
+        "jql_urgent_service" : "project = ITOCMS AND \"PPM Type\" in (Urgent, Service, Special) AND status not in (Withdrawn, Rejected) AND \"Target Date\" >= now() ORDER BY \"Target Date\" ASC",
+
+        "jql_biweekly_prn" : "project = ITOCMS AND summary ~ \"PPM%s*\" OR (summary ~ \"PRN%s*\" AND created >= -40d) AND status not in (Withdrawn, Rejected) AND \"Promotion Schedule\" is not EMPTY ORDER BY summary",
+
+        "jql_biweekly_urgent_service" : "status not in (Withdrawn, Rejected) AND ((\"Proposed Action\" ~ \"*%s*\" AND NOT \"Proposed Action\" ~ \"*%s-*\") OR (\"Proposed Action\" ~ \"*eekly*\" OR \"Proposed Action\" ~ \"*ormal*\") AND NOT \"Proposed Action\" ~ \"*%s-*\" AND resolution was EMPTY during (\"%s\", now())) AND issueLinkType not in (\"P-Form combined by\") AND (priority = Urgent OR priority = Medium AND \"Promotion Schedule\" is EMPTY) AND \"Promotion Documents\" is not EMPTY AND \"PPM Number\" is not EMPTY ORDER BY \"PPM Number\" DESC",
+
+        "jiraFields": "&maxResults=1000&fields=customfield_11400,summary,description,customfield_11628,status,customfield_10519,customfield_14500,customfield_11887,customfield_11599,customfield_10508,issuelinks",
+
+        "jfrogAPI": "http://160.98.24.163:55742/artifactory/api/search/aql"
+    },
+
+    "emailConfig" : {
+        "subject_urgent_service" : "IMP JIRA URGENT & SERVICE Promotions Daily Updates",
+
+        "subject_biweekly" : "IMP JIRA Bi-Weekly Updates for %s",
+
+        "cms_biweekly_release_folder" : "_CMS Normal Release",
+
+        "recipients" : ""
+    },
+
+    "hospList" : [
+                "HKEC", "CHC", "PYN", "RH", "SJH", "TWE", "WCH",
+                "HKWC", "DKC", "FYK", "GH", "ML", "QMH", "TWH", "TYH",
+                "KEC", "HHH", "TKO", "UCH",
+                "KCC", "BH", "HCH", "HKE", "KH", "KWH", "OLM", "QEH", "WTS",
+                "KWC", "KCH", "CMC", "NLT", "PMH", "YCH",
+                "NTEC", "AHN", "BBH", "CHS", "NDH", "PWH", "SH", "TPH",
+                "NTWC", "CPH", "POH", "SLH", "TMH", "TSH"
+            ]
+}
